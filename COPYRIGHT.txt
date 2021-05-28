@@ -1,0 +1,10 @@
+Most of this library was written by:
+
+  Inhabited Type LLC
+
+This work is derived from the library "Jsonaf", version 0.1.0.  The library
+"Jsonaf" was written and is distributed by:
+
+  Inhabited Type LLC
+
+The original license of "Jsonaf" can be found in the file "LICENSE-Inhabited-Type.txt".

@@ -1,0 +1,2 @@
+(library (name jsonaf_kernel) (libraries angstrom faraday)
+ (preprocess (pps ppx_jane)))

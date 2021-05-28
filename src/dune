@@ -1,0 +1,2 @@
+(library (name jsonaf) (libraries base jsonaf_kernel)
+ (preprocess (pps ppx_jane)))
