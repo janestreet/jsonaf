@@ -17,6 +17,10 @@ let to_string t = Jsonaf_kernel.Serializer.run t
 let to_string_hum t = Jsonaf_kernel.Serializer.run_hum ~spaces:2 t
 let parse input = Jsonaf_kernel.Parser.run input |> Result.map_error ~f:Error.of_string
 
+let parse_many input =
+  Jsonaf_kernel.Parser.run_many input |> Result.map_error ~f:Error.of_string
+;;
+
 let of_string input =
   match parse input with
   | Ok t -> t

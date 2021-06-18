@@ -84,6 +84,10 @@ module Parser = struct
   let run number_of_string string =
     Angstrom.(parse_string ~consume:All (t number_of_string)) string
   ;;
+
+  let run_many number_of_string string =
+    Angstrom.(parse_string ~consume:All (many (t number_of_string))) string
+  ;;
 end
 
 module Serializer = struct

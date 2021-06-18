@@ -15,6 +15,7 @@ type t =
 module Parser : sig
   val t : t Angstrom.t
   val run : string -> (t, string) result
+  val run_many : string -> (t list, string) result
 end
 
 module Serializer : sig

@@ -17,6 +17,7 @@ module Parser : sig
 
   val t : 'number parser -> 'number t Angstrom.t
   val run : 'number parser -> string -> ('number t, string) result
+  val run_many : 'number parser -> string -> ('number t list, string) result
 end
 
 module Serializer : sig

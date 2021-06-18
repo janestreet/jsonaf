@@ -1,4 +1,4 @@
-open Core_kernel
+open Core
 open Jsonaf
 open Expect_test_helpers_core
 

@@ -19,7 +19,20 @@ type t =
 (** [exactly_equal] checks equality including exact key order within objects *)
 val exactly_equal : t -> t -> bool
 
+(** [parse s] parses a single JSON object from [s]. It is an error if [s] does not contain
+    exactly one JSON object. See [parse_many]. *)
 val parse : string -> t Or_error.t
+
+(** [parse_many] parses zero or more JSON objects from [s].
+
+    Caveats: [parse_many] succeeds only if all JSON objects parse, and its error messages
+    may be significantly worse than those from [parse].
+
+    To get the well-formed objects up to the syntax error, and then a good error message,
+    consider piping through [jq -c], splitting on newlines, and then parsing each line
+    with [parse]. But this is much slower than [run_many].
+*)
+val parse_many : string -> t list Or_error.t
 
 include Stringable.S with type t := t
 

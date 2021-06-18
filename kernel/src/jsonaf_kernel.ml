@@ -17,6 +17,7 @@ module Parser = struct
   let parse_number = Result.ok
   let t = Expert.Parser.t parse_number
   let run = Expert.Parser.run parse_number
+  let run_many = Expert.Parser.run_many parse_number
 end
 
 module Serializer = struct
