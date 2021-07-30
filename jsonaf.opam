@@ -11,7 +11,11 @@ build: [
 ]
 depends: [
   "ocaml" {>= "4.10.0"}
-  "dune" {>= "2.0.0"}
+  "base"
+  "ppx_jane"
+  "angstrom" {>= "0.14.1"}
+  "dune"     {>= "2.0.0"}
+  "faraday"
 ]
 synopsis: "A library for parsing, manipulating, and serializing data structured as JSON."
 description: "

@@ -41,6 +41,7 @@ val to_string_hum : t -> string
 
 include Pretty_printer.S with type t := t
 module Jsonafable = Jsonafable
+include Jsonafable.S with type t := t
 
 module Parser : sig
   val t : t Angstrom.t

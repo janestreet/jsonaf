@@ -1,0 +1,198 @@
+[%%org
+  {|
+#+TITLE: JSON extraction with ~Of_json~
+
+This library provides an applicative interface for extracting values from JSON
+objects with an emphasis on readability and error handling, particularly with
+nested values. It expects to parse values of type ~Jsonaf.t~.
+
+A typical use case:
+|}]
+
+;;
+#verbose true
+
+open Core
+open Jane
+
+module Order = struct
+  type t =
+    { size : int
+    ; price : Price.Fixed.t
+    ; symbol : Trading_symbol.t
+    ; side : Dir.t
+    }
+
+  let of_json =
+    [%map_open.Of_json
+      let size = "size" @. int
+      and price = "price" @. number @> Price.Fixed.of_string
+      and symbol = "symbol" @. string @> Trading_symbol.of_string
+      and side = "side" @. string @> Dir.of_string in
+      { size; price; symbol; side }]
+  ;;
+end
+
+[%%expect
+  {|
+module Order :
+  sig
+    type t = {
+      size : int;
+      price : Price.Fixed.t;
+      symbol : Trading_symbol.t;
+      side : Jane_kernel._dir;
+    }
+    val of_json : t Of_json.t
+  end
+|}]
+
+[%%org
+  {|
+See ~src/helpers.mli~ for documentation on the API. This module is opened when
+you use ~Let_syntax~ with ~map_open~ or ~bind_open~. We can use this module as follows:
+|}]
+
+let order =
+  Jsonaf.parse
+    {|
+      {
+        "size": 100,
+        "price": 12.34,
+        "symbol": "ZVZZT",
+        "side": "buy"
+      }
+    |}
+  |> Or_error.ok_exn
+  |> Order.of_json
+;;
+
+[%%expect
+  {|
+val order : Order.t =
+  {Order.size = 100; price = 12.3400000; symbol = ZVZZT; side = Jane.Dir.Buy}
+|}]
+
+[%%org {|
+Note that errors provide context for where the parsing went wrong.
+|}]
+
+let order =
+  Jsonaf.parse
+    {|
+      {
+        "size": 100,
+        "price": 12.34,
+        "symbol": "ZVZZT",
+        "side": "foo"
+      }
+    |}
+  |> Or_error.ok_exn
+  |> Order.of_json
+;;
+
+[%%expect
+  {|
+Exception:
+(helpers.ml.Of_json_conv_failed
+  ("Of_json failed to convert"
+    (Failure
+       "of_string failed on foo with (Of_sexp_error \"dir.ml.Stable.V1.t_of_sexp: unexpected sum tag\"\
+      \n (invalid_sexp foo))")
+    ("json context [1]" (String foo))
+    ("json context [0], at key [side]"
+      (Object
+        ((size (Number 100)) (price (Number 12.34)) (symbol (String ZVZZT))
+          (side (String foo)))))))
+|}]
+
+[%%org
+  {|
+A popular pattern in some JSON APIs is to use mixed-type arrays to pack information more
+densly, particularly in websockets where there is no compression. You can use
+~Array_as_tuple~ to parse information.
+|}]
+
+;;
+#verbose false
+
+module Websocket_order = struct
+  type t = Order.t
+
+  let of_json =
+    let open Of_json in
+    tuple
+      Array_as_tuple.(
+        let%map size = shift @@ int
+        and price = shift @@ number @> Price.Fixed.of_string
+        and symbol = shift @@ string @> Trading_symbol.of_string
+        and side = shift @@ string @> Dir.of_string in
+        { Order.size; price; symbol; side })
+  ;;
+end
+
+;;
+#verbose true
+
+let order =
+  Jsonaf.parse {| [100, 12.34, "ZVZZT", "buy"] |}
+  |> Or_error.ok_exn
+  |> Websocket_order.of_json
+;;
+
+[%%expect
+  {|
+val order : Websocket_order.t =
+  {Order.size = 100; price = 12.3400000; symbol = ZVZZT; side = Jane.Dir.Buy}
+|}]
+
+[%%org
+  {|
+If the remote API adds extra values to the array, your parse will fail because they were
+ignored. If this is not important for your app, you can use ~drop_rest~.
+|}]
+
+let parse_array of_json =
+  Jsonaf.parse {| [100, "hello", true, "extra value!"] |} |> Or_error.ok_exn |> of_json
+;;
+
+let result =
+  parse_array
+  @@
+  let open Of_json in
+  tuple
+    Array_as_tuple.(
+      let%map a = shift int
+      and b = shift string
+      and c = shift bool in
+      a, b, c)
+;;
+
+[%%expect
+  {|
+val parse_array : (Jsonaf_kernel.t -> 'a) -> 'a = <fun>
+Exception:
+(helpers.ml.Of_json_conv_failed
+  ("Of_json failed to convert"
+    ("array_as_tuple has unparsed elements"
+      (elems ((String "extra value!"))))
+    ("json context [0]"
+      (Array ((Number 100) (String hello) True (String "extra value!"))))))
+|}]
+
+let result =
+  parse_array
+  @@
+  let open Of_json in
+  tuple
+    Array_as_tuple.(
+      let%map a = shift int
+      and b = shift string
+      and c = shift bool
+      and () = drop_rest in
+      a, b, c)
+;;
+
+[%%expect {|
+val result : int * string * bool = (100, "hello", true)
+|}]

@@ -12,6 +12,8 @@ type t =
   constraint t = Jsonaf_kernel.t
 [@@deriving sexp, equal]
 
+let jsonaf_of_t t = t
+let t_of_jsonaf t = t
 let exactly_equal = equal
 let to_string t = Jsonaf_kernel.Serializer.run t
 let to_string_hum t = Jsonaf_kernel.Serializer.run_hum ~spaces:2 t
