@@ -8,8 +8,8 @@ nested values. It expects to parse values of type ~Jsonaf.t~.
 
 A typical use case:
 |}]
-
 ;;
+
 #verbose true
 
 open Core
@@ -112,8 +112,8 @@ A popular pattern in some JSON APIs is to use mixed-type arrays to pack informat
 densly, particularly in websockets where there is no compression. You can use
 ~Array_as_tuple~ to parse information.
 |}]
-
 ;;
+
 #verbose false
 
 module Websocket_order = struct
@@ -130,8 +130,8 @@ module Websocket_order = struct
         { Order.size; price; symbol; side })
   ;;
 end
-
 ;;
+
 #verbose true
 
 let order =

@@ -1,0 +1,3 @@
+(library (name of_json)
+ (libraries core_extended.appendable_list core_kernel.core jsonaf)
+ (preprocess (pps ppx_jane)))
