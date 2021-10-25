@@ -13,7 +13,15 @@ type t =
   ]
 
 module Parser : sig
+  (** This reads whitespace as a prefix but stops parsing at the end of the JSON value
+      encountered without reading any trailing whitespace. This is mostly useful if you're
+      wanting to parse streaming values and get the latest result immediately rather than
+      waiting to determine how much whitespace is available after the JSON. *)
+  val t_without_trailing_whitespace : t Angstrom.t
+
+  (** This will read and ignore whitespace both before and after the JSON value. *)
   val t : t Angstrom.t
+
   val run : string -> (t, string) result
   val run_many : string -> (t list, string) result
 end

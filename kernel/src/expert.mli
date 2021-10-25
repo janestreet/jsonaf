@@ -15,6 +15,7 @@ type 'number t =
 module Parser : sig
   type 'number parser := string -> ('number, string) result
 
+  val t_without_trailing_whitespace : 'number parser -> 'number t Angstrom.t
   val t : 'number parser -> 'number t Angstrom.t
   val run : 'number parser -> string -> ('number t, string) result
   val run_many : 'number parser -> string -> ('number t list, string) result

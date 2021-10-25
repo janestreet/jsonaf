@@ -38,7 +38,7 @@ module Parser = struct
     | Error msg -> fail msg
   ;;
 
-  let t number =
+  let t_without_trailing_whitespace number =
     let open Angstrom in
     let advance1 = advance 1 in
     let pair x y = x, y in
@@ -78,8 +78,9 @@ module Parser = struct
       | '<' -> fail_char '<' ~hint:"does your string contain HTML instead of JSON?"
       | c -> fail_char c)
     <?> "json"
-    <* ws
   ;;
+
+  let t number = t_without_trailing_whitespace number <* ws
 
   let run number_of_string string =
     Angstrom.(parse_string ~consume:All (t number_of_string)) string

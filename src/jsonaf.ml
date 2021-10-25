@@ -104,6 +104,20 @@ module Util = struct
     | json -> raise_s [%message "Jsonaf.int_exn: not an int" (json : t)]
   ;;
 
+  let float json =
+    match json with
+    | `Number number ->
+      (try Some (Float.of_string number) with
+       | _ -> None)
+    | _ -> None
+  ;;
+
+  let float_exn json =
+    match json with
+    | `Number number -> Float.of_string number
+    | json -> raise_s [%message "Jsonaf.float_exn: not a float" (json : t)]
+  ;;
+
   let string json =
     match json with
     | `String i -> Some i
@@ -138,6 +152,18 @@ module Util = struct
     match json with
     | `Object xs -> xs
     | json -> raise_s [%message "Jsonaf.assoc_list_exn: not an assoc_list" (json : t)]
+  ;;
+
+  let keys json =
+    match json with
+    | `Object xs -> Some (List.map xs ~f:fst)
+    | _ -> None
+  ;;
+
+  let keys_exn json =
+    match json with
+    | `Object xs -> List.map xs ~f:fst
+    | json -> raise_s [%message "Jsonaf.keys_exn: not an assoc_list" (json : t)]
   ;;
 end
 

@@ -59,8 +59,14 @@ val member : string -> t -> t option
 val member_exn : string -> t -> t
 val bool : t -> bool option
 val bool_exn : t -> bool
+
+(** If [t] is a json number but not parseable as a [float], [float t] returns [None].
+    Similarly [int t] will return [None] if the number is not parseable as an [int]. *)
+
 val int : t -> int option
 val int_exn : t -> int
+val float : t -> float option
+val float_exn : t -> float
 val string : t -> string option
 val string_exn : t -> string
 val list : t -> t list option
@@ -73,6 +79,14 @@ val assoc_list : t -> (string * t) list option
 (** If [t] is an object, return the association list between keys and values. Otherwise,
     raise. O(1). *)
 val assoc_list_exn : t -> (string * t) list
+
+(** If [t] is an object, return the keys of that object. Otherwise,
+    return [None]. O(n). *)
+val keys : t -> string list option
+
+(** If [t] is an object, return the keys of that object. Otherwise,
+    raise. O(n). *)
+val keys_exn : t -> string list
 
 val jsonaf_of_unit : unit -> Jsonaf_kernel.t
 val jsonaf_of_bool : bool -> Jsonaf_kernel.t

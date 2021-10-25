@@ -97,7 +97,7 @@ Exception:
 (helpers.ml.Of_json_conv_failed
   ("Of_json failed to convert"
     (Failure
-       "of_string failed on foo with (Of_sexp_error \"dir.ml.Stable.V1.t_of_sexp: unexpected sum tag\"\
+       "of_string failed on foo with (Of_sexp_error \"dir.ml.Stable.V1.t_of_sexp: unexpected variant constructor\"\
       \n (invalid_sexp foo))")
     ("json context [1]" (String foo))
     ("json context [0], at key [side]"
