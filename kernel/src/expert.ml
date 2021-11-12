@@ -19,14 +19,24 @@ module Parser = struct
       | _ -> false)
   ;;
 
+  let fail_word =
+    (* Used for bare words like true, false, and null. Ideally we would parse as
+       much of the word as we could, then fail on the next character, but Angstrom
+       will always backtrack on failures. *)
+    take_while1 (function
+      | 'a' .. 'z' -> true
+      | _ -> false)
+    >>= fun s -> fail (Printf.sprintf "unexpected string: '%s'" s)
+  ;;
+
   let lchar c = ws *> char c
   let rsb = lchar ']'
   let rcb = lchar '}'
   let ns, vs = lchar ':', lchar ','
   let quo = lchar '"'
-  let _false = string "false" *> return `False
-  let _true = string "true" *> return `True
-  let _null = string "null" *> return `Null
+  let _false = string "false" *> return `False <|> fail_word
+  let _true = string "true" *> return `True <|> fail_word
+  let _null = string "null" *> return `Null <|> fail_word
 
   let num number =
     take_while1 (function
@@ -38,7 +48,7 @@ module Parser = struct
     | Error msg -> fail msg
   ;;
 
-  let t_without_trailing_whitespace number =
+  let create_without_trailing_whitespace number =
     let open Angstrom in
     let advance1 = advance 1 in
     let pair x y = x, y in
@@ -47,17 +57,12 @@ module Parser = struct
     fix (fun json ->
       let mem = lift2 pair (quo *> str <* ns) json in
       let obj = advance1 *> sep_by vs mem <* rcb >>| fun ms -> `Object ms in
+      let obj = obj <?> "object" in
       let arr = advance1 *> sep_by vs json <* rsb >>| fun vs -> `Array vs in
+      let arr = arr <?> "array" in
       let str = advance1 *> str >>| fun s -> `String s in
-      let fail_word =
-        (* Used for bare words like true, false, and null. Ideally we would parse as
-           much of the word as we could, then fail on the next character, but Angstrom
-           will always backtrack on failures. *)
-        take_while1 (function
-          | 'a' .. 'z' -> true
-          | _ -> false)
-        >>= fun s -> fail (Printf.sprintf "unexpected string: '%s'" s)
-      in
+      let str = str <?> "string" in
+      let num = num number <?> "number" in
       let fail_char ?hint char =
         let message = Printf.sprintf "unexpected character: '%c'" char in
         match hint with
@@ -66,29 +71,21 @@ module Parser = struct
       in
       commit *> ws *> peek_char_fail
       >>= function
-      | 'f' -> _false <|> fail_word
-      | 'n' -> _null <|> fail_word
-      | 't' -> _true <|> fail_word
-      | '{' -> obj <?> "object"
-      | '[' -> arr <?> "array"
-      | '"' -> str <?> "string"
+      | 'f' -> _false
+      | 'n' -> _null
+      | 't' -> _true
+      | '{' -> obj
+      | '[' -> arr
+      | '"' -> str
       | '-' | '+' | '0' .. '9' | '.' ->
         (* strictly speaking, we should only allow '-' or '0' .. '9' to start numbers. *)
-        num number <?> "number"
+        num
       | '<' -> fail_char '<' ~hint:"does your string contain HTML instead of JSON?"
       | c -> fail_char c)
     <?> "json"
   ;;
 
-  let t number = t_without_trailing_whitespace number <* ws
-
-  let run number_of_string string =
-    Angstrom.(parse_string ~consume:All (t number_of_string)) string
-  ;;
-
-  let run_many number_of_string string =
-    Angstrom.(parse_string ~consume:All (many (t number_of_string))) string
-  ;;
+  let create number = create_without_trailing_whitespace number <* ws
 end
 
 module Serializer = struct
@@ -157,18 +154,6 @@ module Serializer = struct
   ;;
 
   (* need to eta-expand to avoid the value restriction *)
-  let serialize s t = serialize_hum' ~indent:0 ~spaces:0 s t
-  let serialize_hum ~spaces s t = serialize_hum' ~indent:0 ~spaces s t
-
-  let run serialize_number t =
-    let faraday = Faraday.create 0x1000 in
-    serialize serialize_number t faraday;
-    Faraday.serialize_to_string faraday
-  ;;
-
-  let run_hum ~spaces serialize_number t =
-    let faraday = Faraday.create 0x1000 in
-    serialize_hum ~spaces serialize_number t faraday;
-    Faraday.serialize_to_string faraday
-  ;;
+  let create s t = serialize_hum' ~indent:0 ~spaces:0 s t
+  let create_hum ~spaces s t = serialize_hum' ~indent:0 ~spaces s t
 end
