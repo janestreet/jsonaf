@@ -60,6 +60,12 @@ val member_exn : string -> t -> t
 val bool : t -> bool option
 val bool_exn : t -> bool
 
+(** Same as [member], but returns [`Null] instead of [None] if the member isn't present.
+    This function is useful when migrating from [Yojson], as it is equivalent to
+    [Yojson.Safe.Util.member]. If writing new code using Jsonaf, you should probably avoid
+    it. Consider using [Of_json] instead. *)
+val member_or_null : string -> t -> t
+
 (** If [t] is a json number but not parseable as a [float], [float t] returns [None].
     Similarly [int t] will return [None] if the number is not parseable as an [int]. *)
 

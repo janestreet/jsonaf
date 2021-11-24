@@ -76,6 +76,12 @@ module Util = struct
     | _ -> None
   ;;
 
+  let member_or_null key json =
+    match member key json with
+    | Some x -> x
+    | None -> `Null
+  ;;
+
   let bool json =
     match json with
     | `True -> Some true

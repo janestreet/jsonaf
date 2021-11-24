@@ -175,14 +175,6 @@ let serialize t s =
     else (
       let i = off + len in
       match s.[i] with
-      | c when c <= '\031' ->
-        (* non-visible characters have to be escaped *)
-        let c = Char.code c in
-        flush ~off ~len;
-        write_string t "\\u00";
-        write_uint8 t (to_hex_digit (c lsr 4));
-        write_uint8 t (to_hex_digit (c land 0xf));
-        go ~off:(i + 1) ~len:0
       | '"' ->
         flush ~off ~len;
         write_string t "\\\"";
@@ -210,6 +202,14 @@ let serialize t s =
       | '\\' ->
         flush ~off ~len;
         write_string t "\\\\";
+        go ~off:(i + 1) ~len:0
+      | '\000' .. '\031' as c ->
+        (* non-visible characters have to be escaped *)
+        let c = Char.code c in
+        flush ~off ~len;
+        write_string t "\\u00";
+        write_uint8 t (to_hex_digit (c lsr 4));
+        write_uint8 t (to_hex_digit (c land 0xf));
         go ~off:(i + 1) ~len:0
       | _ -> go ~off ~len:(len + 1))
   in

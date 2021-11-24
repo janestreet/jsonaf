@@ -17,7 +17,7 @@ depends: [
   "dune"     {>= "2.0.0"}
   "faraday"
 ]
-synopsis: "A library for parsing, manipulating, and serializing data structured as JSON."
+synopsis: "A library for parsing, manipulating, and serializing data structured as JSON"
 description: "
 A library for parsing, manipulating, and serializing data structured as JSON.
 "
