@@ -1,5 +1,6 @@
 open StdLabels
 open MoreLabels
+include Conv_intf
 
 type t = Type.t
 

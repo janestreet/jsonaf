@@ -44,7 +44,10 @@ module Jsonafable = Jsonafable
 include Jsonafable.S with type t := t
 
 module Parser : sig
+  (** For parsing a JSON stream, e.g., when using [Angstrom_async.parse_many], you should
+      instead use [Jsonaf_kernel.Parser.t_without_trailing_whitespace]. *)
   val t : t Angstrom.t
+
   val run : string -> (t, string) Result.t
 end
 
@@ -94,46 +97,4 @@ val keys : t -> string list option
     raise. O(n). *)
 val keys_exn : t -> string list
 
-val jsonaf_of_unit : unit -> Jsonaf_kernel.t
-val jsonaf_of_bool : bool -> Jsonaf_kernel.t
-val jsonaf_of_string : string -> Jsonaf_kernel.t
-val jsonaf_of_bytes : bytes -> Jsonaf_kernel.t
-val jsonaf_of_char : char -> Jsonaf_kernel.t
-val jsonaf_of_int : int -> Jsonaf_kernel.t
-val jsonaf_of_float : float -> Jsonaf_kernel.t
-val jsonaf_of_int32 : int32 -> Jsonaf_kernel.t
-val jsonaf_of_int64 : int64 -> Jsonaf_kernel.t
-val jsonaf_of_nativeint : nativeint -> Jsonaf_kernel.t
-val jsonaf_of_ref : ('a -> Jsonaf_kernel.t) -> 'a ref -> Jsonaf_kernel.t
-val jsonaf_of_lazy_t : ('a -> Jsonaf_kernel.t) -> 'a lazy_t -> Jsonaf_kernel.t
-val jsonaf_of_option : ('a -> Jsonaf_kernel.t) -> 'a option -> Jsonaf_kernel.t
-val jsonaf_of_list : ('a -> Jsonaf_kernel.t) -> 'a list -> Jsonaf_kernel.t
-val jsonaf_of_array : ('a -> Jsonaf_kernel.t) -> 'a array -> Jsonaf_kernel.t
-
-val jsonaf_of_hashtbl
-  :  ('a -> Jsonaf_kernel.t)
-  -> ('b -> Jsonaf_kernel.t)
-  -> ('a, 'b) Caml.Hashtbl.t
-  -> Jsonaf_kernel.t
-
-val unit_of_jsonaf : Jsonaf_kernel.t -> unit
-val bool_of_jsonaf : Jsonaf_kernel.t -> bool
-val string_of_jsonaf : Jsonaf_kernel.t -> string
-val bytes_of_jsonaf : Jsonaf_kernel.t -> bytes
-val char_of_jsonaf : Jsonaf_kernel.t -> char
-val int_of_jsonaf : Jsonaf_kernel.t -> int
-val float_of_jsonaf : Jsonaf_kernel.t -> float
-val int32_of_jsonaf : Jsonaf_kernel.t -> int32
-val int64_of_jsonaf : Jsonaf_kernel.t -> int64
-val nativeint_of_jsonaf : Jsonaf_kernel.t -> nativeint
-val ref_of_jsonaf : (Jsonaf_kernel.t -> 'a) -> Jsonaf_kernel.t -> 'a ref
-val lazy_t_of_jsonaf : (Jsonaf_kernel.t -> 'a) -> Jsonaf_kernel.t -> 'a lazy_t
-val option_of_jsonaf : (Jsonaf_kernel.t -> 'a) -> Jsonaf_kernel.t -> 'a option
-val list_of_jsonaf : (Jsonaf_kernel.t -> 'a) -> Jsonaf_kernel.t -> 'a list
-val array_of_jsonaf : (Jsonaf_kernel.t -> 'a) -> Jsonaf_kernel.t -> 'a array
-
-val hashtbl_of_jsonaf
-  :  (Jsonaf_kernel.t -> 'a)
-  -> (Jsonaf_kernel.t -> 'b)
-  -> Jsonaf_kernel.t
-  -> ('a, 'b) Caml.Hashtbl.t
+module Export : Jsonaf_kernel.Conv.Primitives

@@ -174,7 +174,7 @@ module Util = struct
 end
 
 module Jsonaf_conv = Jsonaf_kernel.Conv
-include Jsonaf_conv.Primitives
+module Export = Jsonaf_conv.Primitives
 
 let () =
   let module Sexp_conv = Sexplib0.Sexp_conv in
