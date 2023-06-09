@@ -131,20 +131,20 @@ module Serializer = struct
     -> unit
     =
     fun ~indent ~spaces serialize_number faraday brackets serialize_item items ->
-      match items with
-      | [] -> Faraday.write_string faraday brackets
-      | item :: items ->
-        Faraday.write_char faraday brackets.[0];
-        let indent = indent + spaces in
+    match items with
+    | [] -> Faraday.write_string faraday brackets
+    | item :: items ->
+      Faraday.write_char faraday brackets.[0];
+      let indent = indent + spaces in
+      maybe_newline_and_indent ~spaces faraday indent;
+      serialize_item ~indent ~spaces serialize_number item faraday;
+      List.iter items ~f:(fun item ->
+        Faraday.write_char faraday ',';
         maybe_newline_and_indent ~spaces faraday indent;
-        serialize_item ~indent ~spaces serialize_number item faraday;
-        List.iter items ~f:(fun item ->
-          Faraday.write_char faraday ',';
-          maybe_newline_and_indent ~spaces faraday indent;
-          serialize_item ~indent ~spaces serialize_number item faraday);
-        let indent = indent - spaces in
-        maybe_newline_and_indent ~spaces faraday indent;
-        Faraday.write_char faraday brackets.[1]
+        serialize_item ~indent ~spaces serialize_number item faraday);
+      let indent = indent - spaces in
+      maybe_newline_and_indent ~spaces faraday indent;
+      Faraday.write_char faraday brackets.[1]
 
   and serialize_kv ~indent ~spaces serialize_number (k, v) faraday =
     Json_string.serialize faraday k;
