@@ -89,7 +89,6 @@ module Parser = struct
 end
 
 module Serializer = struct
-
   let spaces = String.init 100 (fun _ -> ' ')
 
   let rec write_spaces faraday num =
@@ -120,15 +119,15 @@ module Serializer = struct
       serialize_list ~indent ~spaces serialize_number faraday "[]" serialize_hum' items
 
   and serialize_list :
-    'a 'b.
-      indent:int
-    -> spaces:int
-    -> 'a
-    -> Faraday.t
-    -> string
-    -> (indent:int -> spaces:int -> 'a -> 'b -> Faraday.t -> unit)
-    -> 'b list
-    -> unit
+        'a 'b.
+        indent:int
+        -> spaces:int
+        -> 'a
+        -> Faraday.t
+        -> string
+        -> (indent:int -> spaces:int -> 'a -> 'b -> Faraday.t -> unit)
+        -> 'b list
+        -> unit
     =
     fun ~indent ~spaces serialize_number faraday brackets serialize_item items ->
     match items with

@@ -31,7 +31,6 @@ module Serializer = struct
   let serialize = Expert.Serializer.create serialize_number
   let serialize_hum ~spaces = Expert.Serializer.create_hum ~spaces serialize_number
 
-
   let run t =
     let faraday = Faraday.create 0x1000 in
     serialize t faraday;

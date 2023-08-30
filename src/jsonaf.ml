@@ -35,11 +35,11 @@ module Parser = Jsonaf_kernel.Parser
 module Serializer = Jsonaf_kernel.Serializer
 
 include Pretty_printer.Register (struct
-    type nonrec t = t
+  type nonrec t = t
 
-    let module_name = "Jsonaf"
-    let to_string = to_string_hum
-  end)
+  let module_name = "Jsonaf"
+  let to_string = to_string_hum
+end)
 
 module Util = struct
   let index_exn index json =
@@ -181,14 +181,14 @@ let () =
   Sexp_conv.Exn_converter.add
     [%extension_constructor Jsonaf_conv.Of_jsonaf_error]
     (function
-      | Jsonaf_conv.Of_jsonaf_error (v0, v1) ->
-        let v0 =
-          match v0 with
-          | Failure v0 -> Sexplib0.Sexp.Atom v0
-          | v0 -> Sexp_conv.sexp_of_exn v0
-        and v1 = sexp_of_t v1 in
-        Sexplib0.Sexp.(List [ Atom "Of_jsonaf_error"; v0; v1 ])
-      | _ -> assert false)
+    | Jsonaf_conv.Of_jsonaf_error (v0, v1) ->
+      let v0 =
+        match v0 with
+        | Failure v0 -> Sexplib0.Sexp.Atom v0
+        | v0 -> Sexp_conv.sexp_of_exn v0
+      and v1 = sexp_of_t v1 in
+      Sexplib0.Sexp.(List [ Atom "Of_jsonaf_error"; v0; v1 ])
+    | _ -> assert false)
 ;;
 
 include Util
