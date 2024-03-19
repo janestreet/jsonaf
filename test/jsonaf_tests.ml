@@ -8,5 +8,6 @@ let%expect_test "parse error contains input" =
     (raised (
       "Jsonaf.of_string: parse error"
       (error "json > object: char '}'")
-      (input "{a: \001}"))) |}]
+      (input "{a: \001}")))
+    |}]
 ;;

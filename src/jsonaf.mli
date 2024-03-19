@@ -45,10 +45,17 @@ include Jsonafable.S with type t := t
 
 module Parser : sig
   (** For parsing a JSON stream, e.g., when using [Angstrom_async.parse_many], you should
-      instead use [Jsonaf_kernel.Parser.t_without_trailing_whitespace]. *)
+      instead use [t_without_trailing_whitespace]. *)
   val t : t Angstrom.t
 
+  (** [t_without_trailing_whitespace] will parse a single JSON value without consuming any
+      trailing whitespace. This is useful in the context of streaming multiple JSON values
+      because it will immediately return [t] when it is parsed, but it may fail in other
+      parsing contexts where the input buffer is expected to be fully consumed. *)
+  val t_without_trailing_whitespace : t Angstrom.t
+
   val run : string -> (t, string) Result.t
+  val run_many : string -> (t list, string) Result.t
 end
 
 module Serializer : sig

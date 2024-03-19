@@ -49,8 +49,8 @@ let%expect_test "error" =
     {|
     (Of_jsonaf_error
       (Invalid_argument "Bool.of_string: expected true or false but got maybe")
-      (String maybe)) |}];
+      (String maybe))
+    |}];
   test `Null;
-  [%expect {|
-    (Of_jsonaf_error "string expected" Null) |}]
+  [%expect {| (Of_jsonaf_error "string expected" Null) |}]
 ;;
