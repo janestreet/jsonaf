@@ -14,7 +14,7 @@ depends: [
   "base"
   "ppx_jane"
   "angstrom" {>= "0.15.0"}
-  "dune"     {>= "2.0.0"}
+  "dune"     {>= "3.11.0"}
   "faraday"  {>= "0.8.1"}
 ]
 available: arch != "arm32" & arch != "x86_32"
