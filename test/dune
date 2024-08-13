@@ -1,5 +1,5 @@
 (library
  (name jsonaf_test)
- (libraries jsonaf expect_test_helpers_core)
+ (libraries jsonaf core expect_test_helpers_core)
  (preprocess
   (pps ppx_jane ppx_jsonaf_conv)))

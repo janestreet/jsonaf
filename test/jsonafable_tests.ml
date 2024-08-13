@@ -31,7 +31,7 @@ let%expect_test "round trip" =
   let test (type a) (module M : S with type t = a) expected =
     let jsonaf = M.jsonaf_of_t expected in
     let observed = M.t_of_jsonaf jsonaf in
-    require_compare_equal [%here] (module M) observed expected;
+    require_compare_equal (module M) observed expected;
     print_endline (Jsonaf.to_string jsonaf)
   in
   test (module Status) true;
@@ -42,7 +42,7 @@ let%expect_test "round trip" =
 
 let%expect_test "error" =
   let test jsonaf =
-    require_does_raise [%here] (fun () -> ignore (Status.t_of_jsonaf jsonaf : Status.t))
+    require_does_raise (fun () -> ignore (Status.t_of_jsonaf jsonaf : Status.t))
   in
   test (`String "maybe");
   [%expect

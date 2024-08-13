@@ -1,6 +1,6 @@
 (library
  (name jsonaf_kernel)
  (public_name jsonaf.kernel)
- (libraries angstrom faraday)
+ (libraries angstrom bigstringaf faraday)
  (preprocess
   (pps ppx_jane)))

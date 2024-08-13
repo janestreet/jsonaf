@@ -52,8 +52,7 @@ module Parser = struct
     let open Angstrom in
     let advance1 = advance 1 in
     let pair x y = x, y in
-    let buf = Buffer.create 0x1000 in
-    let str = Json_string.parse buf in
+    let str = Json_string.parse in
     fix (fun json ->
       let mem = lift2 pair (quo *> str <* ns) json in
       let obj = advance1 *> sep_by vs mem <* rcb >>| fun ms -> `Object ms in
@@ -118,16 +117,16 @@ module Serializer = struct
     | `Array items ->
       serialize_list ~indent ~spaces serialize_number faraday "[]" serialize_hum' items
 
-  and serialize_list :
-        'a 'b.
-        indent:int
-        -> spaces:int
-        -> 'a
-        -> Faraday.t
-        -> string
-        -> (indent:int -> spaces:int -> 'a -> 'b -> Faraday.t -> unit)
-        -> 'b list
-        -> unit
+  and serialize_list
+    : 'a 'b.
+    indent:int
+    -> spaces:int
+    -> 'a
+    -> Faraday.t
+    -> string
+    -> (indent:int -> spaces:int -> 'a -> 'b -> Faraday.t -> unit)
+    -> 'b list
+    -> unit
     =
     fun ~indent ~spaces serialize_number faraday brackets serialize_item items ->
     match items with

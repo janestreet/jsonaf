@@ -35,11 +35,11 @@ module Parser = Jsonaf_kernel.Parser
 module Serializer = Jsonaf_kernel.Serializer
 
 include Pretty_printer.Register (struct
-  type nonrec t = t
+    type nonrec t = t
 
-  let module_name = "Jsonaf"
-  let to_string = to_string_hum
-end)
+    let module_name = "Jsonaf"
+    let to_string = to_string_hum
+  end)
 
 module Util = struct
   let index_exn index json =

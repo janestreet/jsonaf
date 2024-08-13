@@ -13,9 +13,10 @@ depends: [
   "ocaml" {>= "5.1.0"}
   "base"
   "ppx_jane"
-  "angstrom" {>= "0.15.0"}
-  "dune"     {>= "3.11.0"}
-  "faraday"  {>= "0.8.1"}
+  "angstrom"    {>= "0.15.0"}
+  "bigstringaf"
+  "dune"        {>= "3.11.0"}
+  "faraday"     {>= "0.8.1"}
 ]
 available: arch != "arm32" & arch != "x86_32"
 synopsis: "A library for parsing, manipulating, and serializing data structured as JSON"
