@@ -10,7 +10,7 @@ type t =
   | `Array of t list
   ]
   constraint t = Jsonaf_kernel.t
-[@@deriving sexp]
+[@@deriving sexp, globalize]
 
 (** Note that we intentionally do not expose [compare] or [equal] functions for [t].
     Objects in JSON are considered unordered, so two different representations of [t]
