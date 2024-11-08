@@ -10,7 +10,7 @@ type t =
   | `Array of t list
   ]
   constraint t = Jsonaf_kernel.t
-[@@deriving sexp, equal]
+[@@deriving sexp, equal, globalize]
 
 let jsonaf_of_t t = t
 let t_of_jsonaf t = t
