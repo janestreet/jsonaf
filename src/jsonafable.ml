@@ -42,7 +42,7 @@ module Stable = struct
       ;;
 
       let jsonaf_of_t (t : M.t) : Jsonaf_kernel.t =
-        `Number (!Sexplib0.Sexp_conv.default_string_of_float (M.to_float t))
+        `Number ((Dynamic.get Sexplib0.Sexp_conv.default_string_of_float) (M.to_float t))
       ;;
     end
   end
