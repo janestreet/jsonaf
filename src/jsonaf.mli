@@ -13,8 +13,8 @@ type t =
 [@@deriving sexp, globalize]
 
 (** Note that we intentionally do not expose [compare] or [equal] functions for [t].
-    Objects in JSON are considered unordered, so two different representations of [t]
-    may be unequal using the derived equal but the same according to the JSON spec. *)
+    Objects in JSON are considered unordered, so two different representations of [t] may
+    be unequal using the derived equal but the same according to the JSON spec. *)
 
 (** [exactly_equal] checks equality including exact key order within objects *)
 val exactly_equal : t -> t -> bool
@@ -30,8 +30,7 @@ val parse : string -> t Or_error.t
 
     To get the well-formed objects up to the syntax error, and then a good error message,
     consider piping through [jq -c], splitting on newlines, and then parsing each line
-    with [parse]. But this is much slower than [run_many].
-*)
+    with [parse]. But this is much slower than [run_many]. *)
 val parse_many : string -> t list Or_error.t
 
 include Stringable.S with type t := t
@@ -96,12 +95,10 @@ val assoc_list : t -> (string * t) list option
     raise. O(1). *)
 val assoc_list_exn : t -> (string * t) list
 
-(** If [t] is an object, return the keys of that object. Otherwise,
-    return [None]. O(n). *)
+(** If [t] is an object, return the keys of that object. Otherwise, return [None]. O(n). *)
 val keys : t -> string list option
 
-(** If [t] is an object, return the keys of that object. Otherwise,
-    raise. O(n). *)
+(** If [t] is an object, return the keys of that object. Otherwise, raise. O(n). *)
 val keys_exn : t -> string list
 
 module Export : Jsonaf_kernel.Conv.Primitives

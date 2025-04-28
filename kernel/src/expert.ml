@@ -10,6 +10,21 @@ type 'number t =
   | `Array of 'number t list
   ]
 
+module Or_raw = struct
+  type ('number, 't) t =
+    [< `Raw_json_string of string
+    | `Null
+    | `False
+    | `True
+    | `String of string
+    | `Number of 'number
+    | `Object of (string * 't) list
+    | `Array of 't list
+    ]
+    as
+    't
+end
+
 module Parser = struct
   open Angstrom
 
@@ -116,6 +131,7 @@ module Serializer = struct
       serialize_list ~indent ~spaces serialize_number faraday "{}" serialize_kv items
     | `Array items ->
       serialize_list ~indent ~spaces serialize_number faraday "[]" serialize_hum' items
+    | `Raw_json_string string -> Faraday.write_string faraday string
 
   and serialize_list
     : 'a 'b.

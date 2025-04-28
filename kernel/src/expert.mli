@@ -12,6 +12,25 @@ type 'number t =
   | `Array of 'number t list
   ]
 
+module Or_raw : sig
+  (** [Or_raw.t] is a JSON object that can contain raw, unquoted JSON. This can be used
+      to, for instance, incorporate already-serialized JSON into new JSON objects without
+      parsing them first. But there's no guarantee that an [Or_raw.t] represents valid
+      JSON. The type is specified such that every [t] is also a valid [Or_raw.t]. *)
+  type ('number, 't) t =
+    [< `Raw_json_string of string
+    | `Null
+    | `False
+    | `True
+    | `String of string
+    | `Number of 'number
+    | `Object of (string * 't) list
+    | `Array of 't list
+    ]
+    as
+    't
+end
+
 module Parser : sig
   type 'number parser := string -> ('number, string) result
 
@@ -24,10 +43,15 @@ module Serializer : sig
 
   (** Faraday serializer for a json object given a serializer for the number type. This
       minimizes whitespace in the serialized representation. *)
-  val create : 'number serializer -> 'number t -> Faraday.t -> unit
+  val create : 'number serializer -> ('number, _) Or_raw.t -> Faraday.t -> unit
 
   (** [create_hum ~spaces] is like [serialize] but it adds newlines and spaces in the same
       way that [JSON.stringify(_,_,spaces)] does in JavaScript. If [spaces] is 0 then the
       result is the same as that of {!serialize}. *)
-  val create_hum : spaces:int -> 'number serializer -> 'number t -> Faraday.t -> unit
+  val create_hum
+    :  spaces:int
+    -> 'number serializer
+    -> ('number, _) Or_raw.t
+    -> Faraday.t
+    -> unit
 end
