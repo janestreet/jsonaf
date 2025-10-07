@@ -42,11 +42,11 @@ module type Conv = sig
   val jsonaf_of_unit : unit -> Type.t
 
   (** [jsonaf_of_bool b] converts the value [b] of type [bool] to an Jsonaf_kernel. *)
-  val jsonaf_of_bool : bool -> Type.t
+  val jsonaf_of_bool : bool -> Type.t @@ portable
 
   (** [jsonaf_of_string str] converts the value [str] of type [string] to an
       Jsonaf_kernel. *)
-  val jsonaf_of_string : string -> Type.t
+  val jsonaf_of_string : string -> Type.t @@ portable
 
   (** [jsonaf_of_bytes str] converts the value [str] of type [bytes] to an Jsonaf_kernel. *)
   val jsonaf_of_bytes : bytes -> Type.t
@@ -58,7 +58,7 @@ module type Conv = sig
   val jsonaf_of_int : int -> Type.t
 
   (** [jsonaf_of_float n] converts the value [n] of type [float] to an Jsonaf_kernel. *)
-  val jsonaf_of_float : float -> Type.t
+  val jsonaf_of_float : float -> Type.t @@ portable
 
   (** [jsonaf_of_int32 n] converts the value [n] of type [int32] to an Jsonaf_kernel. *)
   val jsonaf_of_int32 : int32 -> Type.t
@@ -80,7 +80,7 @@ module type Conv = sig
 
   (** [jsonaf_of_option conv opt] converts the value [opt] of type ['a option] to an
       Jsonaf_kernel. Uses [conv] to convert values of type ['a] to an Jsonaf_kernel. *)
-  val jsonaf_of_option : ('a -> Type.t) -> 'a option -> Type.t
+  val jsonaf_of_option : ('a -> Type.t) -> 'a option -> Type.t @@ portable
 
   (** [jsonaf_of_pair conv1 conv2 pair] converts a pair to an Jsonaf_kernel. It uses its
       first argument to convert the first element of the pair, and its second argument to
@@ -98,7 +98,7 @@ module type Conv = sig
 
   (** [jsonaf_of_list conv lst] converts the value [lst] of type ['a list] to an
       Jsonaf_kernel. Uses [conv] to convert values of type ['a] to an Jsonaf_kernel. *)
-  val jsonaf_of_list : ('a -> Type.t) -> 'a list -> Type.t
+  val jsonaf_of_list : ('a -> Type.t) -> 'a list -> Type.t @@ portable
 
   (** [jsonaf_of_array conv ar] converts the value [ar] of type ['a array] to an
       Jsonaf_kernel. Uses [conv] to convert values of type ['a] to an Jsonaf_kernel. *)
