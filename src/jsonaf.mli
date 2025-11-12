@@ -62,43 +62,45 @@ module Serializer : sig
   val run : t -> string
 end
 
-val index : int -> t -> t option
-val index_exn : int -> t -> t
-val member : string -> t -> t option
-val member_exn : string -> t -> t
-val bool : t -> bool option
-val bool_exn : t -> bool
+include sig @@ portable
+  val index : int -> t -> t option
+  val index_exn : int -> t -> t
+  val member : string -> t -> t option
+  val member_exn : string -> t -> t
+  val bool : t -> bool option
+  val bool_exn : t -> bool
 
-(** Same as [member], but returns [`Null] instead of [None] if the member isn't present.
-    This function is useful when migrating from [Yojson], as it is equivalent to
-    [Yojson.Safe.Util.member]. If writing new code using Jsonaf, you should probably avoid
-    it. Consider using [Of_json] instead. *)
-val member_or_null : string -> t -> t
+  (** Same as [member], but returns [`Null] instead of [None] if the member isn't present.
+      This function is useful when migrating from [Yojson], as it is equivalent to
+      [Yojson.Safe.Util.member]. If writing new code using Jsonaf, you should probably
+      avoid it. Consider using [Of_json] instead. *)
+  val member_or_null : string -> t -> t
 
-(** If [t] is a json number but not parseable as a [float], [float t] returns [None].
-    Similarly [int t] will return [None] if the number is not parseable as an [int]. *)
+  (** If [t] is a json number but not parseable as a [float], [float t] returns [None].
+      Similarly [int t] will return [None] if the number is not parseable as an [int]. *)
 
-val int : t -> int option
-val int_exn : t -> int
-val float : t -> float option
-val float_exn : t -> float
-val string : t -> string option
-val string_exn : t -> string
-val list : t -> t list option
-val list_exn : t -> t list
+  val int : t -> int option
+  val int_exn : t -> int
+  val float : t -> float option
+  val float_exn : t -> float
+  val string : t -> string option
+  val string_exn : t -> string
+  val list : t -> t list option
+  val list_exn : t -> t list
 
-(** If [t] is an object, return the association list between keys and values. Otherwise,
-    return [None]. O(1). *)
-val assoc_list : t -> (string * t) list option
+  (** If [t] is an object, return the association list between keys and values. Otherwise,
+      return [None]. O(1). *)
+  val assoc_list : t -> (string * t) list option
 
-(** If [t] is an object, return the association list between keys and values. Otherwise,
-    raise. O(1). *)
-val assoc_list_exn : t -> (string * t) list
+  (** If [t] is an object, return the association list between keys and values. Otherwise,
+      raise. O(1). *)
+  val assoc_list_exn : t -> (string * t) list
 
-(** If [t] is an object, return the keys of that object. Otherwise, return [None]. O(n). *)
-val keys : t -> string list option
+  (** If [t] is an object, return the keys of that object. Otherwise, return [None]. O(n). *)
+  val keys : t -> string list option
 
-(** If [t] is an object, return the keys of that object. Otherwise, raise. O(n). *)
-val keys_exn : t -> string list
+  (** If [t] is an object, return the keys of that object. Otherwise, raise. O(n). *)
+  val keys_exn : t -> string list
+end
 
 module Export : Jsonaf_kernel.Conv.Primitives

@@ -1,20 +1,28 @@
 module type Primitives = sig
-  val jsonaf_of_unit : unit -> Type.t
-  val jsonaf_of_bool : bool -> Type.t
-  val jsonaf_of_string : string -> Type.t
-  val jsonaf_of_bytes : bytes -> Type.t
-  val jsonaf_of_char : char -> Type.t
-  val jsonaf_of_int : int -> Type.t
-  val jsonaf_of_float : float -> Type.t
-  val jsonaf_of_int32 : int32 -> Type.t
-  val jsonaf_of_int64 : int64 -> Type.t
-  val jsonaf_of_nativeint : nativeint -> Type.t
-  val jsonaf_of_ref : ('a -> Type.t) -> 'a ref -> Type.t
-  val jsonaf_of_lazy_t : ('a -> Type.t) -> 'a lazy_t -> Type.t
-  val jsonaf_of_option : ('a -> Type.t) -> 'a option -> Type.t
-  val jsonaf_of_list : ('a -> Type.t) -> 'a list -> Type.t
-  val jsonaf_of_array : ('a -> Type.t) -> 'a array -> Type.t
-  val jsonaf_of_hashtbl : ('a -> Type.t) -> ('b -> Type.t) -> ('a, 'b) Hashtbl.t -> Type.t
+  include sig @@ portable
+    val jsonaf_of_unit : unit -> Type.t
+    val jsonaf_of_bool : bool -> Type.t
+    val jsonaf_of_string : string -> Type.t
+    val jsonaf_of_bytes : bytes -> Type.t
+    val jsonaf_of_char : char -> Type.t
+    val jsonaf_of_int : int -> Type.t
+    val jsonaf_of_float : float -> Type.t
+    val jsonaf_of_int32 : int32 -> Type.t
+    val jsonaf_of_int64 : int64 -> Type.t
+    val jsonaf_of_nativeint : nativeint -> Type.t
+    val jsonaf_of_ref : ('a -> Type.t) -> 'a ref -> Type.t
+    val jsonaf_of_lazy_t : ('a -> Type.t) -> 'a lazy_t -> Type.t
+    val jsonaf_of_option : ('a -> Type.t) -> 'a option -> Type.t
+    val jsonaf_of_list : ('a -> Type.t) -> 'a list -> Type.t
+    val jsonaf_of_array : ('a -> Type.t) -> 'a array -> Type.t
+
+    val jsonaf_of_hashtbl
+      :  ('a -> Type.t)
+      -> ('b -> Type.t)
+      -> ('a, 'b) Hashtbl.t
+      -> Type.t
+  end
+
   val unit_of_jsonaf : Type.t -> unit
   val bool_of_jsonaf : Type.t -> bool
   val string_of_jsonaf : Type.t -> string
@@ -38,86 +46,94 @@ module type Conv = sig
 
   (** Conversion of OCaml-values to Jsonaf_kernels *)
 
-  (** [jsonaf_of_unit ()] converts a value of type [unit] to an Jsonaf_kernel. *)
-  val jsonaf_of_unit : unit -> Type.t
+  include sig @@ portable
+    (** [jsonaf_of_unit ()] converts a value of type [unit] to an Jsonaf_kernel. *)
+    val jsonaf_of_unit : unit -> Type.t
 
-  (** [jsonaf_of_bool b] converts the value [b] of type [bool] to an Jsonaf_kernel. *)
-  val jsonaf_of_bool : bool -> Type.t @@ portable
+    (** [jsonaf_of_bool b] converts the value [b] of type [bool] to an Jsonaf_kernel. *)
+    val jsonaf_of_bool : bool -> Type.t
 
-  (** [jsonaf_of_string str] converts the value [str] of type [string] to an
-      Jsonaf_kernel. *)
-  val jsonaf_of_string : string -> Type.t @@ portable
+    (** [jsonaf_of_string str] converts the value [str] of type [string] to an
+        Jsonaf_kernel. *)
+    val jsonaf_of_string : string -> Type.t
 
-  (** [jsonaf_of_bytes str] converts the value [str] of type [bytes] to an Jsonaf_kernel. *)
-  val jsonaf_of_bytes : bytes -> Type.t
+    (** [jsonaf_of_bytes str] converts the value [str] of type [bytes] to an
+        Jsonaf_kernel. *)
+    val jsonaf_of_bytes : bytes -> Type.t
 
-  (** [jsonaf_of_char c] converts the value [c] of type [char] to an Jsonaf_kernel. *)
-  val jsonaf_of_char : char -> Type.t
+    (** [jsonaf_of_char c] converts the value [c] of type [char] to an Jsonaf_kernel. *)
+    val jsonaf_of_char : char -> Type.t
 
-  (** [jsonaf_of_int n] converts the value [n] of type [int] to an Jsonaf_kernel. *)
-  val jsonaf_of_int : int -> Type.t
+    (** [jsonaf_of_int n] converts the value [n] of type [int] to an Jsonaf_kernel. *)
+    val jsonaf_of_int : int -> Type.t
 
-  (** [jsonaf_of_float n] converts the value [n] of type [float] to an Jsonaf_kernel. *)
-  val jsonaf_of_float : float -> Type.t @@ portable
+    (** [jsonaf_of_float n] converts the value [n] of type [float] to an Jsonaf_kernel. *)
+    val jsonaf_of_float : float -> Type.t
 
-  (** [jsonaf_of_int32 n] converts the value [n] of type [int32] to an Jsonaf_kernel. *)
-  val jsonaf_of_int32 : int32 -> Type.t
+    (** [jsonaf_of_int32 n] converts the value [n] of type [int32] to an Jsonaf_kernel. *)
+    val jsonaf_of_int32 : int32 -> Type.t
 
-  (** [jsonaf_of_int64 n] converts the value [n] of type [int64] to an Jsonaf_kernel. *)
-  val jsonaf_of_int64 : int64 -> Type.t
+    (** [jsonaf_of_int64 n] converts the value [n] of type [int64] to an Jsonaf_kernel. *)
+    val jsonaf_of_int64 : int64 -> Type.t
 
-  (** [jsonaf_of_nativeint n] converts the value [n] of type [nativeint] to an
-      Jsonaf_kernel. *)
-  val jsonaf_of_nativeint : nativeint -> Type.t
+    (** [jsonaf_of_nativeint n] converts the value [n] of type [nativeint] to an
+        Jsonaf_kernel. *)
+    val jsonaf_of_nativeint : nativeint -> Type.t
 
-  (** [jsonaf_of_ref conv r] converts the value [r] of type ['a ref] to an Jsonaf_kernel.
-      Uses [conv] to convert values of type ['a] to an Jsonaf_kernel. *)
-  val jsonaf_of_ref : ('a -> Type.t) -> 'a ref -> Type.t
+    (** [jsonaf_of_ref conv r] converts the value [r] of type ['a ref] to an
+        Jsonaf_kernel. Uses [conv] to convert values of type ['a] to an Jsonaf_kernel. *)
+    val jsonaf_of_ref : ('a -> Type.t) -> 'a ref -> Type.t
 
-  (** [jsonaf_of_lazy_t conv l] converts the value [l] of type ['a lazy_t] to an
-      Jsonaf_kernel. Uses [conv] to convert values of type ['a] to an Jsonaf_kernel. *)
-  val jsonaf_of_lazy_t : ('a -> Type.t) -> 'a lazy_t -> Type.t
+    (** [jsonaf_of_lazy_t conv l] converts the value [l] of type ['a lazy_t] to an
+        Jsonaf_kernel. Uses [conv] to convert values of type ['a] to an Jsonaf_kernel. *)
+    val jsonaf_of_lazy_t : ('a -> Type.t) -> 'a lazy_t -> Type.t
 
-  (** [jsonaf_of_option conv opt] converts the value [opt] of type ['a option] to an
-      Jsonaf_kernel. Uses [conv] to convert values of type ['a] to an Jsonaf_kernel. *)
-  val jsonaf_of_option : ('a -> Type.t) -> 'a option -> Type.t @@ portable
+    (** [jsonaf_of_option conv opt] converts the value [opt] of type ['a option] to an
+        Jsonaf_kernel. Uses [conv] to convert values of type ['a] to an Jsonaf_kernel. *)
+    val jsonaf_of_option : ('a -> Type.t) -> 'a option -> Type.t
 
-  (** [jsonaf_of_pair conv1 conv2 pair] converts a pair to an Jsonaf_kernel. It uses its
-      first argument to convert the first element of the pair, and its second argument to
-      convert the second element of the pair. *)
-  val jsonaf_of_pair : ('a -> Type.t) -> ('b -> Type.t) -> 'a * 'b -> Type.t
+    (** [jsonaf_of_pair conv1 conv2 pair] converts a pair to an Jsonaf_kernel. It uses its
+        first argument to convert the first element of the pair, and its second argument
+        to convert the second element of the pair. *)
+    val jsonaf_of_pair : ('a -> Type.t) -> ('b -> Type.t) -> 'a * 'b -> Type.t
 
-  (** [jsonaf_of_triple conv1 conv2 conv3 triple] converts a triple to an Jsonaf_kernel
-      using [conv1], [conv2], and [conv3] to convert its elements. *)
-  val jsonaf_of_triple
-    :  ('a -> Type.t)
-    -> ('b -> Type.t)
-    -> ('c -> Type.t)
-    -> 'a * 'b * 'c
-    -> Type.t
+    (** [jsonaf_of_triple conv1 conv2 conv3 triple] converts a triple to an Jsonaf_kernel
+        using [conv1], [conv2], and [conv3] to convert its elements. *)
+    val jsonaf_of_triple
+      :  ('a -> Type.t)
+      -> ('b -> Type.t)
+      -> ('c -> Type.t)
+      -> 'a * 'b * 'c
+      -> Type.t
 
-  (** [jsonaf_of_list conv lst] converts the value [lst] of type ['a list] to an
-      Jsonaf_kernel. Uses [conv] to convert values of type ['a] to an Jsonaf_kernel. *)
-  val jsonaf_of_list : ('a -> Type.t) -> 'a list -> Type.t @@ portable
+    (** [jsonaf_of_list conv lst] converts the value [lst] of type ['a list] to an
+        Jsonaf_kernel. Uses [conv] to convert values of type ['a] to an Jsonaf_kernel. *)
+    val jsonaf_of_list : ('a -> Type.t) -> 'a list -> Type.t
 
-  (** [jsonaf_of_array conv ar] converts the value [ar] of type ['a array] to an
-      Jsonaf_kernel. Uses [conv] to convert values of type ['a] to an Jsonaf_kernel. *)
-  val jsonaf_of_array : ('a -> Type.t) -> 'a array -> Type.t
+    (** [jsonaf_of_array conv ar] converts the value [ar] of type ['a array] to an
+        Jsonaf_kernel. Uses [conv] to convert values of type ['a] to an Jsonaf_kernel. *)
+    val jsonaf_of_array : ('a -> Type.t) -> 'a array -> Type.t
 
-  (** [jsonaf_of_hashtbl conv_key conv_value htbl] converts the value [htbl] of type
-      [('a, 'b) Hashtbl.t] to an Jsonaf_kernel. Uses [conv_key] to convert the hashtable
-      keys of type ['a], and [conv_value] to convert hashtable values of type ['b] to
-      Jsonaf_kernels. *)
-  val jsonaf_of_hashtbl : ('a -> Type.t) -> ('b -> Type.t) -> ('a, 'b) Hashtbl.t -> Type.t
+    (** [jsonaf_of_hashtbl conv_key conv_value htbl] converts the value [htbl] of type
+        [('a, 'b) Hashtbl.t] to an Jsonaf_kernel. Uses [conv_key] to convert the hashtable
+        keys of type ['a], and [conv_value] to convert hashtable values of type ['b] to
+        Jsonaf_kernels. *)
+    val jsonaf_of_hashtbl
+      :  ('a -> Type.t)
+      -> ('b -> Type.t)
+      -> ('a, 'b) Hashtbl.t
+      -> Type.t
 
-  (** [jsonaf_of_opaque x] converts the value [x] of opaque type to an Jsonaf_kernel. This
-      means the user need not provide converters, but the result cannot be interpreted. *)
-  val jsonaf_of_opaque : 'a -> Type.t
+    (** [jsonaf_of_opaque x] converts the value [x] of opaque type to an Jsonaf_kernel.
+        This means the user need not provide converters, but the result cannot be
+        interpreted. *)
+    val jsonaf_of_opaque : 'a -> Type.t
 
-  (** [jsonaf_of_fun f] converts the value [f] of function type to a dummy Jsonaf_kernel.
-      Functions cannot be serialized as Jsonaf_kernels, but at least a placeholder can be
-      generated for pretty-printing. *)
-  val jsonaf_of_fun : ('a -> 'b) -> Type.t
+    (** [jsonaf_of_fun f] converts the value [f] of function type to a dummy
+        Jsonaf_kernel. Functions cannot be serialized as Jsonaf_kernels, but at least a
+        placeholder can be generated for pretty-printing. *)
+    val jsonaf_of_fun : ('a -> 'b) -> Type.t
+  end
 
   (** Conversion of Jsonaf_kernels to OCaml-values *)
 
