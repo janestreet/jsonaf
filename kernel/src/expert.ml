@@ -35,9 +35,9 @@ module Parser = struct
   ;;
 
   let fail_word =
-    (* Used for bare words like true, false, and null. Ideally we would parse as
-       much of the word as we could, then fail on the next character, but Angstrom
-       will always backtrack on failures. *)
+    (* Used for bare words like true, false, and null. Ideally we would parse as much of
+       the word as we could, then fail on the next character, but Angstrom will always
+       backtrack on failures. *)
     take_while1 (function
       | 'a' .. 'z' -> true
       | _ -> false)

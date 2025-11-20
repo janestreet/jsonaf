@@ -54,8 +54,8 @@ let jsonaf_of_triple jsonaf_of__a jsonaf_of__b jsonaf_of__c (a, b, c) =
   `Array [ jsonaf_of__a a; jsonaf_of__b b; jsonaf_of__c c ]
 ;;
 
-(* List.rev (List.rev_map ...) is tail recursive, the OCaml standard
-   library List.map is NOT. *)
+(* List.rev (List.rev_map ...) is tail recursive, the OCaml standard library List.map is
+   NOT. *)
 let jsonaf_of_list jsonaf_of__a lst = `Array (List.rev (List.rev_map ~f:jsonaf_of__a lst))
 
 let jsonaf_of_array jsonaf_of__a ar =
