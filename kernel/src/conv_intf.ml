@@ -139,7 +139,7 @@ module type Conv = sig
 
   (** [Of_jsonaf_error (exn, jsonaf)] the exception raised when an Jsonaf_kernel could not
       be successfully converted to an OCaml-value. *)
-  exception Of_jsonaf_error of exn * Type.t
+  exception Of_jsonaf_error of exn * Type.t @@ contended portable
 
   (** [record_check_extra_fields] checks for extra (= unknown) fields in record
       Jsonaf_kernels. *)

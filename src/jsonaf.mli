@@ -12,6 +12,8 @@ type t =
   constraint t = Jsonaf_kernel.t
 [@@deriving sexp, globalize]
 
+val mode_cross : t @ contended -> t @ portable @@ portable
+
 (** Note that we intentionally do not expose [compare] or [equal] functions for [t].
     Objects in JSON are considered unordered, so two different representations of [t] may
     be unequal using the derived equal but the same according to the JSON spec. *)
@@ -63,44 +65,71 @@ module Serializer : sig
 end
 
 include sig @@ portable
-  val index : int -> t -> t option
-  val index_exn : int -> t -> t
-  val member : string -> t -> t option
-  val member_exn : string -> t -> t
-  val bool : t -> bool option
-  val bool_exn : t -> bool
+  [%%template:
+  [@@@mode.default m = (local, global)]
+
+  val index : int -> t @ m -> t option @ m
+  val index_exn : int -> t @ m -> t @ m
+  val member : string @ m -> t @ m -> t option @ m
+  val member_exn : string @ m -> t @ m -> t @ m
+  val bool : t @ m -> bool option @ m
+  val bool_exn : t @ m -> bool @ m
 
   (** Same as [member], but returns [`Null] instead of [None] if the member isn't present.
       This function is useful when migrating from [Yojson], as it is equivalent to
       [Yojson.Safe.Util.member]. If writing new code using Jsonaf, you should probably
       avoid it. Consider using [Of_json] instead. *)
-  val member_or_null : string -> t -> t
+  val member_or_null : string @ m -> t @ m -> t @ m
 
   (** If [t] is a json number but not parseable as a [float], [float t] returns [None].
       Similarly [int t] will return [None] if the number is not parseable as an [int]. *)
 
-  val int : t -> int option
-  val int_exn : t -> int
-  val float : t -> float option
-  val float_exn : t -> float
-  val string : t -> string option
-  val string_exn : t -> string
-  val list : t -> t list option
-  val list_exn : t -> t list
+  val int : t @ m -> int option @ m
+  val int_exn : t @ m -> int @ m
+  val float : t @ m -> float option @ m
+  val float_exn : t @ m -> float @ m
+  val string : t @ m -> string option @ m
+  val string_exn : t @ m -> string @ m
+  val list : t @ m -> t list option @ m
+  val list_exn : t @ m -> t list @ m
 
   (** If [t] is an object, return the association list between keys and values. Otherwise,
       return [None]. O(1). *)
-  val assoc_list : t -> (string * t) list option
+  val assoc_list : t @ m -> (string * t) list option @ m
 
   (** If [t] is an object, return the association list between keys and values. Otherwise,
       raise. O(1). *)
-  val assoc_list_exn : t -> (string * t) list
+  val assoc_list_exn : t @ m -> (string * t) list @ m]
+
+  [%%template:
+  [@@@alloc.default a @ m = (stack_local, heap_global)]
 
   (** If [t] is an object, return the keys of that object. Otherwise, return [None]. O(n). *)
-  val keys : t -> string list option
+  val keys : t @ m -> string list option @ m
 
   (** If [t] is an object, return the keys of that object. Otherwise, raise. O(n). *)
-  val keys_exn : t -> string list
+  val keys_exn : t @ m -> string list @ m]
 end
 
 module Export : Jsonaf_kernel.Conv.Primitives
+
+module Or_null : sig @@ portable
+  [%%template:
+  [@@@mode.default m = (local, global)]
+
+  val index : int -> t @ m -> t or_null @ m
+  val member : string @ m -> t @ m -> t or_null @ m
+  val bool : t @ m -> bool or_null
+
+  (** If [t] is a json number but not parseable as a [float], [float t] returns [None].
+      Similarly [int t] will return [None] if the number is not parseable as an [int]. *)
+
+  val int : t @ m -> int or_null
+  val float : t @ m -> float or_null
+  val string : t @ m -> string or_null @ m
+  val list : t @ m -> t list or_null @ m
+
+  (** If [t] is an object, return the association list between keys and values. Otherwise,
+      return [None]. O(1). *)
+  val assoc_list : t @ m -> (string * t) list or_null @ m]
+end

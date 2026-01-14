@@ -12,6 +12,7 @@ type t =
   constraint t = Jsonaf_kernel.t
 [@@deriving sexp, equal ~localize, globalize]
 
+let mode_cross = Jsonaf_kernel.mode_cross
 let jsonaf_of_t t = t
 let t_of_jsonaf t = t
 let exactly_equal = equal
@@ -41,135 +42,69 @@ include Pretty_printer.Register (struct
     let to_string = to_string_hum
   end)
 
-module Util = struct
-  let index_exn index json =
-    match json with
-    | `Array xs as json ->
-      (match List.nth xs index with
-       | Some x -> x
-       | None ->
-         raise_s [%message "Jsonaf.index: index out of ranage" (index : int) (json : t)])
-    | _ as json ->
-      raise_s [%message "Jsonaf.index: json is not an array" (index : int) (json : t)]
-  ;;
+[%%template
+let maybe_globalize_t t = t [@@mode __ = global]
+let maybe_globalize_t (t @ l) = globalize t [@@mode l = local]
+let maybe_globalize_string str = str [@@mode __ = global]
+let maybe_globalize_string (str @ l) = String.globalize str [@@mode l = local]]
+
+module%template Or_null_shim = struct
+  [@@@mode.default l = (local, global)]
 
   let index index = function
-    | `Array xs -> List.nth xs index
-    | _ -> None
+    | `Array xs -> (List.nth_or_null [@mode l]) xs index [@exclave_if_local l]
+    | _ -> Null
   ;;
 
-  let member_exn key json =
+  let member (key @ l) (json @ l) : t or_null @ l =
     match json with
     | `Object xs ->
-      (match List.Assoc.find ~equal:String.equal xs key with
-       | Some x -> x
-       | None ->
-         raise_s
-           [%message "Jsonaf.member: key is not in the object" (key : string) (json : t)])
-    | json ->
-      raise_s [%message "Jsonaf.member: json is not an object" (key : string) (json : t)]
+      (List.Assoc.find_or_null [@mode l])
+        ~equal:(String.equal [@mode l])
+        xs
+        key [@exclave_if_local l]
+    | _ -> Null
   ;;
 
-  let member key json =
+  let bool (json : t) =
     match json with
-    | `Object xs -> List.Assoc.find ~equal:String.equal xs key
-    | _ -> None
+    | `True -> This true
+    | `False -> This false
+    | _ -> Null
   ;;
 
-  let member_or_null key json =
-    match member key json with
-    | Some x -> x
-    | None -> `Null
-  ;;
-
-  let bool json =
-    match json with
-    | `True -> Some true
-    | `False -> Some false
-    | _ -> None
-  ;;
-
-  let bool_exn json =
-    match json with
-    | `True -> true
-    | `False -> false
-    | json -> raise_s [%message "Jsonaf.bool_exn: not a bool" (json : t)]
-  ;;
-
-  let int json =
+  let int (json : t) =
     match json with
     | `Number number ->
-      (try Some (Int.of_string number) with
-       | _ -> None)
-    | _ -> None
+      (try This (Int.of_string number) with
+       | _ -> Null)
+    | _ -> Null
   ;;
 
-  let int_exn json =
-    match json with
-    | `Number number -> Int.of_string number
-    | json -> raise_s [%message "Jsonaf.int_exn: not an int" (json : t)]
-  ;;
-
-  let float json =
+  let float (json : t) =
     match json with
     | `Number number ->
-      (try Some (Float.of_string number) with
-       | _ -> None)
-    | _ -> None
+      (try This (Float.of_string number) with
+       | _ -> Null)
+    | _ -> Null
   ;;
 
-  let float_exn json =
+  let string (json : t) : string or_null @ l =
     match json with
-    | `Number number -> Float.of_string number
-    | json -> raise_s [%message "Jsonaf.float_exn: not a float" (json : t)]
+    | `String i -> This i
+    | _ -> Null
   ;;
 
-  let string json =
+  let list (json : t) : t list or_null @ l =
     match json with
-    | `String i -> Some i
-    | _ -> None
+    | `Array xs -> This xs
+    | _ -> Null
   ;;
 
-  let string_exn json =
+  let assoc_list (json : t) : (string * t) list or_null @ l =
     match json with
-    | `String i -> i
-    | json -> raise_s [%message "Jsonaf.string_exn: not a string" (json : t)]
-  ;;
-
-  let list json =
-    match json with
-    | `Array xs -> Some xs
-    | _ -> None
-  ;;
-
-  let list_exn json =
-    match json with
-    | `Array xs -> xs
-    | json -> raise_s [%message "Jsonaf.list_exn: not a list" (json : t)]
-  ;;
-
-  let assoc_list json =
-    match json with
-    | `Object xs -> Some xs
-    | _ -> None
-  ;;
-
-  let assoc_list_exn json =
-    match json with
-    | `Object xs -> xs
-    | json -> raise_s [%message "Jsonaf.assoc_list_exn: not an assoc_list" (json : t)]
-  ;;
-
-  let keys json =
-    match json with
-    | `Object xs -> Some (List.map xs ~f:fst)
-    | _ -> None
-  ;;
-
-  let keys_exn json =
-    match json with
-    | `Object xs -> List.map xs ~f:fst
-    | json -> raise_s [%message "Jsonaf.keys_exn: not an assoc_list" (json : t)]
+    | `Object xs -> This xs
+    | _ -> Null
   ;;
 end
 
@@ -186,9 +121,157 @@ let () =
         match v0 with
         | Failure v0 -> Sexplib0.Sexp.Atom v0
         | v0 -> Sexp_conv.sexp_of_exn v0
-      and v1 = sexp_of_t v1 in
+      and v1 = sexp_of_t (mode_cross v1) in
       Sexplib0.Sexp.(List [ Atom "Of_jsonaf_error"; v0; v1 ])
     | _ -> assert false)
 ;;
 
-include Util
+[%%template
+[@@@mode.default l = (local, global)]
+
+let index index (json @ l) =
+  ((Or_null_shim.index [@mode l]) index json |> (Or_null.to_option [@mode l]))
+  [@exclave_if_local l ~reasons:[ May_return_regional; Will_return_unboxed ]]
+;;
+
+let index_exn index (json @ l) =
+  match[@exclave_if_local l ~reasons:[ May_return_regional ]] json with
+  | `Array xs as json ->
+    (match (List.nth_or_null [@mode l]) xs index with
+     | This x -> x
+     | Null ->
+       let json = (maybe_globalize_t [@mode l]) json in
+       raise_s [%message "Jsonaf.index: index out of ranage" (index : int) (json : t)])
+  | _ as json ->
+    let json = (maybe_globalize_t [@mode l]) json in
+    raise_s [%message "Jsonaf.index: json is not an array" (index : int) (json : t)]
+;;
+
+let member (key @ l) (json @ l) : t option @ l =
+  ((Or_null_shim.member [@mode l]) key json |> (Or_null.to_option [@mode l]))
+  [@exclave_if_local l ~reasons:[ May_return_regional; Will_return_unboxed ]]
+;;
+
+let member_exn (key @ l) (json @ l) =
+  match[@exclave_if_local l ~reasons:[ May_return_regional ]] json with
+  | `Object xs ->
+    (match (List.Assoc.find_or_null [@mode l]) ~equal:(String.equal [@mode l]) xs key with
+     | This x -> x
+     | Null ->
+       let json = (maybe_globalize_t [@mode l]) json in
+       let key = (maybe_globalize_string [@mode l]) key in
+       raise_s
+         [%message "Jsonaf.member: key is not in the object" (key : string) (json : t)])
+  | json ->
+    let json = (maybe_globalize_t [@mode l]) json in
+    let key = (maybe_globalize_string [@mode l]) key in
+    raise_s [%message "Jsonaf.member: json is not an object" (key : string) (json : t)]
+;;
+
+let member_or_null key (json @ l) =
+  match[@exclave_if_local l ~reasons:[ May_return_regional; Will_return_unboxed ]]
+    (Or_null_shim.member [@mode l]) key json
+  with
+  | This x -> x
+  | Null -> `Null
+;;
+
+let bool (json @ l) =
+  ((Or_null_shim.bool [@mode l]) json |> (Or_null.to_option [@mode l]))
+  [@exclave_if_local l ~reasons:[ May_return_regional; Will_return_unboxed ]]
+;;
+
+let bool_exn json =
+  match json with
+  | `True -> true
+  | `False -> false
+  | json ->
+    let json = (maybe_globalize_t [@mode l]) json in
+    raise_s [%message "Jsonaf.bool_exn: not a bool" (json : t)]
+;;
+
+let int (json @ l) =
+  ((Or_null_shim.int [@mode l]) json |> (Or_null.to_option [@mode l]))
+  [@exclave_if_local l ~reasons:[ May_return_regional; Will_return_unboxed ]]
+;;
+
+let int_exn json =
+  match json with
+  | `Number number -> Int.of_string number
+  | json ->
+    let json = (maybe_globalize_t [@mode l]) json in
+    raise_s [%message "Jsonaf.int_exn: not an int" (json : t)]
+;;
+
+let float (json @ l) =
+  ((Or_null_shim.float [@mode l]) json |> (Or_null.to_option [@mode l]))
+  [@exclave_if_local l ~reasons:[ May_return_regional; Will_return_unboxed ]]
+;;
+
+let float_exn json =
+  match json with
+  | `Number number -> Float.of_string number
+  | json ->
+    let json = (maybe_globalize_t [@mode l]) json in
+    raise_s
+      [%message "Jsonaf.float_exn: not a float" (json : t)]
+    [@exclave_if_local l ~reasons:[ May_return_regional; Will_return_unboxed ]]
+;;
+
+let string (json @ l) =
+  ((Or_null_shim.string [@mode l]) json |> (Or_null.to_option [@mode l]))
+  [@exclave_if_local l ~reasons:[ May_return_regional; Will_return_unboxed ]]
+;;
+
+let string_exn json =
+  match json with
+  | `String i -> i
+  | json ->
+    let json = (maybe_globalize_t [@mode l]) json in
+    raise_s [%message "Jsonaf.string_exn: not a string" (json : t)]
+;;
+
+let list (json @ l) =
+  ((Or_null_shim.list [@mode l]) json |> (Or_null.to_option [@mode l]))
+  [@exclave_if_local l ~reasons:[ May_return_regional; Will_return_unboxed ]]
+;;
+
+let list_exn json =
+  match json with
+  | `Array xs -> xs
+  | json ->
+    let json = (maybe_globalize_t [@mode l]) json in
+    raise_s [%message "Jsonaf.list_exn: not a list" (json : t)]
+;;
+
+let assoc_list (json @ l) =
+  ((Or_null_shim.assoc_list [@mode l]) json |> (Or_null.to_option [@mode l]))
+  [@exclave_if_local l ~reasons:[ May_return_regional; Will_return_unboxed ]]
+;;
+
+let assoc_list_exn json =
+  match json with
+  | `Object xs -> xs
+  | json ->
+    let json = (maybe_globalize_t [@mode l]) json in
+    raise_s [%message "Jsonaf.assoc_list_exn: not an assoc_list" (json : t)]
+;;]
+
+[%%template
+let keys (json : t) : string list option @ l =
+  match json with
+  | `Object xs -> Some ((List.map [@mode l] [@alloc a]) xs ~f:fst) [@exclave_if_stack a]
+  | _ -> None
+[@@alloc a @ l = (heap_global, stack_local)]
+;;
+
+let keys_exn (json @ l) : string list @ l =
+  match json with
+  | `Object xs -> (List.map [@mode l] [@alloc a]) xs ~f:fst [@exclave_if_stack a]
+  | json ->
+    let json = (maybe_globalize_t [@mode l]) json in
+    raise_s [%message "Jsonaf.keys_exn: not an assoc_list" (json : t)]
+[@@alloc a @ l = (heap_global, stack_local)]
+;;]
+
+module Or_null = Or_null_shim

@@ -74,11 +74,14 @@ let jsonaf_of_hashtbl jsonaf_of_key jsonaf_of_val htbl =
 let jsonaf_of_opaque _ = `String "<opaque>"
 let jsonaf_of_fun _ = `String "<fun>"
 
-exception Of_jsonaf_error of exn * t
+exception Of_jsonaf_error of exn * t @@ contended portable
 
 let record_check_extra_fields = ref true
-let of_jsonaf_error_exn exc jsonaf = raise (Of_jsonaf_error (exc, jsonaf))
-let of_jsonaf_error what jsonaf = raise (Of_jsonaf_error (Failure what, jsonaf))
+let of_jsonaf_error_exn exc jsonaf = raise (Of_jsonaf_error (exc, Type.mode_cross jsonaf))
+
+let of_jsonaf_error what jsonaf =
+  raise (Of_jsonaf_error (Failure what, Type.mode_cross jsonaf))
+;;
 
 let unit_of_jsonaf jsonaf =
   match jsonaf with
