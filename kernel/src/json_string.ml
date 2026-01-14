@@ -238,10 +238,10 @@ let[@zero_alloc] [@inline always] has_zero_byte bytes =
   let open Int64.O in
   (* Why does this function work?
 
-     Consider where [(v - x01s) & x80s] has bits set. If a byte of [v] is 0 then in [v -
-     x01s] it will be 0xff or 0xfe depending on borrow. Both those cases will have the
-     0x80 bit set. Otherwise, that bit may only be set if it was already set in [v]. So by
-     anding with [~v], we remove the cases where the byte was not equal to 0. *)
+     Consider where [(v - x01s) & x80s] has bits set. If a byte of [v] is 0 then in
+     [v - x01s] it will be 0xff or 0xfe depending on borrow. Both those cases will have
+     the 0x80 bit set. Otherwise, that bit may only be set if it was already set in [v].
+     So by anding with [~v], we remove the cases where the byte was not equal to 0. *)
   (bytes - 0x0101010101010101L) land lognot bytes land 0x8080808080808080L <> 0L
 ;;
 
@@ -262,16 +262,15 @@ let[@inline always] can_skip_8 s ~off ~strlen =
   match Sys.backend_type, Sys.word_size with
   | Native, 64 -> can_skip_8 s ~off ~strlen
   | _ ->
-    (* [can_skip_8] will be slow/allocation heavy on platforms other than 64-bit native (e.g.
-       js_of_ocaml) so we skip the optimisation on them. *)
+    (* [can_skip_8] will be slow/allocation heavy on platforms other than 64-bit native
+       (e.g. js_of_ocaml) so we skip the optimisation on them. *)
     false
 ;;
 
 let escape_byte_table =
   (* The [i]th byte says what to do when want to represent [Char.chr i] in a json string:
-     0 if we don’t escape [Char.chr i]
-     128 if we \u... escape it
-     some other char if we use that for the escape
+     0 if we don’t escape [Char.chr i] 128 if we \u... escape it some other char if we use
+     that for the escape
   *)
   String.init 256 (fun i ->
     match Char.chr i with

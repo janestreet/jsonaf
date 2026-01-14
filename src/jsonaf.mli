@@ -12,6 +12,8 @@ type t =
   constraint t = Jsonaf_kernel.t
 [@@deriving sexp, globalize]
 
+val mode_cross : t -> t
+
 (** Note that we intentionally do not expose [compare] or [equal] functions for [t].
     Objects in JSON are considered unordered, so two different representations of [t] may
     be unequal using the derived equal but the same according to the JSON spec. *)
@@ -63,6 +65,9 @@ module Serializer : sig
 end
 
 include sig
+  [%%template:
+  [@@@mode.default m = (local, global)]
+
   val index : int -> t -> t option
   val index_exn : int -> t -> t
   val member : string -> t -> t option
@@ -94,13 +99,37 @@ include sig
 
   (** If [t] is an object, return the association list between keys and values. Otherwise,
       raise. O(1). *)
-  val assoc_list_exn : t -> (string * t) list
+  val assoc_list_exn : t -> (string * t) list]
+
+  [%%template:
+  [@@@alloc.default a @ m = (stack_local, heap_global)]
 
   (** If [t] is an object, return the keys of that object. Otherwise, return [None]. O(n). *)
   val keys : t -> string list option
 
   (** If [t] is an object, return the keys of that object. Otherwise, raise. O(n). *)
-  val keys_exn : t -> string list
+  val keys_exn : t -> string list]
 end
 
 module Export : Jsonaf_kernel.Conv.Primitives
+
+module Or_null : sig
+  [%%template:
+  [@@@mode.default m = (local, global)]
+
+  val index : int -> t -> t or_null
+  val member : string -> t -> t or_null
+  val bool : t -> bool or_null
+
+  (** If [t] is a json number but not parseable as a [float], [float t] returns [None].
+      Similarly [int t] will return [None] if the number is not parseable as an [int]. *)
+
+  val int : t -> int or_null
+  val float : t -> float or_null
+  val string : t -> string or_null
+  val list : t -> t list or_null
+
+  (** If [t] is an object, return the association list between keys and values. Otherwise,
+      return [None]. O(1). *)
+  val assoc_list : t -> (string * t) list or_null]
+end

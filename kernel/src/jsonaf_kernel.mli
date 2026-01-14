@@ -12,6 +12,8 @@ type t =
   | `Array of t list
   ]
 
+val mode_cross : t -> t
+
 module Parser : sig
   (** [t_without_trailing_whitespace] will parse a single JSON value without consuming any
       trailing whitespace. This is useful in the context of streaming multiple JSON values

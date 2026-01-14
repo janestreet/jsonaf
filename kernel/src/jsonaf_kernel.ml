@@ -13,6 +13,8 @@ type t =
   ]
   constraint t = Type.t
 
+let mode_cross = Type.mode_cross
+
 module Parser = struct
   let parse_number = Result.ok
 

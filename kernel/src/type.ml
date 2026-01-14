@@ -8,3 +8,5 @@ type t =
   | `Array of t list
   ]
   constraint t = string Expert.t
+
+external mode_cross : t -> t = "%identity"

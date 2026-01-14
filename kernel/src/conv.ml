@@ -54,8 +54,8 @@ let jsonaf_of_triple jsonaf_of__a jsonaf_of__b jsonaf_of__c (a, b, c) =
   `Array [ jsonaf_of__a a; jsonaf_of__b b; jsonaf_of__c c ]
 ;;
 
-(* List.rev (List.rev_map ...) is tail recursive, the OCaml standard
-   library List.map is NOT. *)
+(* List.rev (List.rev_map ...) is tail recursive, the OCaml standard library List.map is
+   NOT. *)
 let jsonaf_of_list jsonaf_of__a lst = `Array (List.rev (List.rev_map ~f:jsonaf_of__a lst))
 
 let jsonaf_of_array jsonaf_of__a ar =
@@ -77,8 +77,11 @@ let jsonaf_of_fun _ = `String "<fun>"
 exception Of_jsonaf_error of exn * t
 
 let record_check_extra_fields = ref true
-let of_jsonaf_error_exn exc jsonaf = raise (Of_jsonaf_error (exc, jsonaf))
-let of_jsonaf_error what jsonaf = raise (Of_jsonaf_error (Failure what, jsonaf))
+let of_jsonaf_error_exn exc jsonaf = raise (Of_jsonaf_error (exc, Type.mode_cross jsonaf))
+
+let of_jsonaf_error what jsonaf =
+  raise (Of_jsonaf_error (Failure what, Type.mode_cross jsonaf))
+;;
 
 let unit_of_jsonaf jsonaf =
   match jsonaf with
