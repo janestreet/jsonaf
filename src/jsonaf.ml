@@ -10,7 +10,7 @@ type t =
   | `Array of t list
   ]
   constraint t = Jsonaf_kernel.t
-[@@deriving sexp, equal ~localize, globalize]
+[@@deriving sexp ~stackify, equal ~localize, globalize]
 
 let mode_cross = Jsonaf_kernel.mode_cross
 let jsonaf_of_t t = t

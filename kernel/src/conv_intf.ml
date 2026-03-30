@@ -1,4 +1,6 @@
 module type Primitives = sig
+  type 'a or_null := 'a Basement.Or_null_shim.t
+
   include sig
     val jsonaf_of_unit : unit -> Type.t
     val jsonaf_of_bool : bool -> Type.t
@@ -13,6 +15,7 @@ module type Primitives = sig
     val jsonaf_of_ref : ('a -> Type.t) -> 'a ref -> Type.t
     val jsonaf_of_lazy_t : ('a -> Type.t) -> 'a lazy_t -> Type.t
     val jsonaf_of_option : ('a -> Type.t) -> 'a option -> Type.t
+    val jsonaf_of_or_null : ('a -> Type.t) -> 'a or_null -> Type.t
     val jsonaf_of_list : ('a -> Type.t) -> 'a list -> Type.t
     val jsonaf_of_array : ('a -> Type.t) -> 'a array -> Type.t
 
@@ -36,6 +39,7 @@ module type Primitives = sig
   val ref_of_jsonaf : (Type.t -> 'a) -> Type.t -> 'a ref
   val lazy_t_of_jsonaf : (Type.t -> 'a) -> Type.t -> 'a lazy_t
   val option_of_jsonaf : (Type.t -> 'a) -> Type.t -> 'a option
+  val or_null_of_jsonaf : (Type.t -> 'a) -> Type.t -> 'a or_null
   val list_of_jsonaf : (Type.t -> 'a) -> Type.t -> 'a list
   val array_of_jsonaf : (Type.t -> 'a) -> Type.t -> 'a array
   val hashtbl_of_jsonaf : (Type.t -> 'a) -> (Type.t -> 'b) -> Type.t -> ('a, 'b) Hashtbl.t
@@ -43,6 +47,8 @@ end
 
 module type Conv = sig
   (** Utility Module for Jsonaf_kernel Conversions *)
+
+  type 'a or_null := 'a Basement.Or_null_shim.t
 
   (** Conversion of OCaml-values to Jsonaf_kernels *)
 
@@ -91,6 +97,10 @@ module type Conv = sig
     (** [jsonaf_of_option conv opt] converts the value [opt] of type ['a option] to an
         Jsonaf_kernel. Uses [conv] to convert values of type ['a] to an Jsonaf_kernel. *)
     val jsonaf_of_option : ('a -> Type.t) -> 'a option -> Type.t
+
+    (** [jsonaf_of_or_null conv x] will produce [null] if [x] is [Null] and [conv inner]
+        if [x] is [This inner]. *)
+    val jsonaf_of_or_null : ('a -> Type.t) -> 'a or_null -> Type.t
 
     (** [jsonaf_of_pair conv1 conv2 pair] converts a pair to an Jsonaf_kernel. It uses its
         first argument to convert the first element of the pair, and its second argument
@@ -145,13 +155,19 @@ module type Conv = sig
       Jsonaf_kernels. *)
   val record_check_extra_fields : bool ref
 
+  [%%template:
+  [@@@mode.default m = (global, local)]
+
   (** [of_jsonaf_error reason jsonaf]
       @raise Of_jsonaf_error (Failure reason, jsonaf). *)
   val of_jsonaf_error : string -> Type.t -> 'a
 
   (** [of_jsonaf_error_exn exc jsonaf]
       @raise Of_jsonaf_error (exc, jsonaf). *)
-  val of_jsonaf_error_exn : exn -> Type.t -> 'a
+  val of_jsonaf_error_exn : exn -> Type.t -> 'a]
+
+  [%%template:
+  [@@@alloc.default a @ m = (heap_global, stack_local)]
 
   (** [unit_of_jsonaf jsonaf] converts Jsonaf_kernel [jsonaf] to a value of type [unit]. *)
   val unit_of_jsonaf : Type.t -> unit
@@ -190,15 +206,14 @@ module type Conv = sig
       value of type ['a]. *)
   val ref_of_jsonaf : (Type.t -> 'a) -> Type.t -> 'a ref
 
-  (** [lazy_t_of_jsonaf conv jsonaf] converts Jsonaf_kernel [jsonaf] to a value of type
-      ['a lazy_t] using conversion function [conv], which converts an Jsonaf_kernel to a
-      value of type ['a]. *)
-  val lazy_t_of_jsonaf : (Type.t -> 'a) -> Type.t -> 'a lazy_t
-
   (** [option_of_jsonaf conv jsonaf] converts Jsonaf_kernel [jsonaf] to a value of type
       ['a option] using conversion function [conv], which converts an Jsonaf_kernel to a
       value of type ['a]. *)
   val option_of_jsonaf : (Type.t -> 'a) -> Type.t -> 'a option
+
+  (** [or_null_of_jsonaf conv jsonaf] will convert a [null] into [Null] and any other json
+      produces [This (conv jsonaf)] *)
+  val or_null_of_jsonaf : (Type.t -> 'a) -> Type.t -> 'a or_null
 
   (** [pair_of_jsonaf conv1 conv2 jsonaf] converts Jsonaf_kernel [jsonaf] to a pair of
       type ['a * 'b] using conversion functions [conv1] and [conv2], which convert
@@ -219,7 +234,12 @@ module type Conv = sig
   (** [list_of_jsonaf conv jsonaf] converts Jsonaf_kernel [jsonaf] to a value of type
       ['a list] using conversion function [conv], which converts an Jsonaf_kernel to a
       value of type ['a]. *)
-  val list_of_jsonaf : (Type.t -> 'a) -> Type.t -> 'a list
+  val list_of_jsonaf : (Type.t -> 'a) -> Type.t -> 'a list]
+
+  (** [lazy_t_of_jsonaf conv jsonaf] converts Jsonaf_kernel [jsonaf] to a value of type
+      ['a lazy_t] using conversion function [conv], which converts an Jsonaf_kernel to a
+      value of type ['a]. *)
+  val lazy_t_of_jsonaf : (Type.t -> 'a) -> Type.t -> 'a lazy_t
 
   (** [array_of_jsonaf conv jsonaf] converts Jsonaf_kernel [jsonaf] to a value of type
       ['a array] using conversion function [conv], which converts an Jsonaf_kernel to a
@@ -232,6 +252,9 @@ module type Conv = sig
       which converts an Jsonaf_kernel to hashtable value of type ['b]. *)
   val hashtbl_of_jsonaf : (Type.t -> 'a) -> (Type.t -> 'b) -> Type.t -> ('a, 'b) Hashtbl.t
 
+  [%%template:
+  [@@@alloc.default a @ m = (heap_global, stack_local)]
+
   (** [opaque_of_jsonaf jsonaf]
       @raise Of_jsonaf_error
         when attempting to convert an Jsonaf_kernel to an opaque value. *)
@@ -239,7 +262,7 @@ module type Conv = sig
 
   (** [fun_of_jsonaf jsonaf]
       @raise Of_jsonaf_error when attempting to convert an Jsonaf_kernel to a function. *)
-  val fun_of_jsonaf : Type.t -> 'a
+  val fun_of_jsonaf : Type.t -> 'a]
 
   module type Primitives = Primitives
 
