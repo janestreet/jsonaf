@@ -38,7 +38,7 @@ module Parser : sig
   val create : 'number parser -> 'number t Angstrom.t
 end
 
-module Serializer : sig
+module Serializer : sig @@ portable
   type 'number serializer := Faraday.t -> 'number -> unit
 
   (** Faraday serializer for a json object given a serializer for the number type. This

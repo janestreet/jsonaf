@@ -28,7 +28,7 @@ module Parser : sig
   val run_many : string -> (t list, string) result
 end
 
-module Serializer : sig
+module Serializer : sig @@ portable
   (** Serialize a json object without any unnecessary whitespace. *)
   val serialize : t -> Faraday.t -> unit
 

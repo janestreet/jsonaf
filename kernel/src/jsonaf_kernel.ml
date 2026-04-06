@@ -30,7 +30,7 @@ end
 
 module Serializer = struct
   let serialize_number f n = Faraday.write_string f n
-  let serialize = Expert.Serializer.create serialize_number
+  let serialize t = Expert.Serializer.create serialize_number t
   let serialize_hum ~spaces = Expert.Serializer.create_hum ~spaces serialize_number
 
   let run t =

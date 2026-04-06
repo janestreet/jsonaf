@@ -10,7 +10,7 @@ type t =
   | `Array of t list
   ]
   constraint t = Jsonaf_kernel.t
-[@@deriving sexp, globalize]
+[@@deriving sexp ~stackify, globalize]
 
 val mode_cross : t @ contended -> t @ portable @@ portable
 
@@ -59,7 +59,7 @@ module Parser : sig
   val run_many : string -> (t list, string) Result.t
 end
 
-module Serializer : sig
+module Serializer : sig @@ portable
   val serialize : t -> Faraday.t -> unit
   val run : t -> string
 end

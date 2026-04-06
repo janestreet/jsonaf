@@ -6,12 +6,14 @@ bug-reports: "https://github.com/janestreet/jsonaf/issues"
 dev-repo: "git+https://github.com/janestreet/jsonaf.git"
 doc: "https://ocaml.janestreet.com/ocaml-core/latest/doc/jsonaf/index.html"
 license: "MIT"
+x-maintenance-intent: ["(latest)"]
 build: [
   ["dune" "build" "-p" name "-j" jobs]
 ]
 depends: [
   "ocaml" {>= "5.1.0"}
   "base"
+  "basement"
   "ppx_jane"
   "angstrom"    {>= "0.15.0"}
   "bigstringaf"

@@ -3,4 +3,4 @@
     character escaping. *)
 
 val parse : string Angstrom.t
-val serialize : Faraday.t -> string -> unit
+val serialize : Faraday.t -> string -> unit @@ portable
