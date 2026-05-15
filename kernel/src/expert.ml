@@ -26,7 +26,11 @@ module Or_raw = struct
 end
 
 module Parser = struct
+  type 'a json = 'a t
+
   open Angstrom
+
+  let string_ignored s = string s *> return ()
 
   let ws =
     skip_while (function
@@ -49,32 +53,43 @@ module Parser = struct
   let rcb = lchar '}'
   let ns, vs = lchar ':', lchar ','
   let quo = lchar '"'
-  let _false = string "false" *> return `False <|> fail_word
-  let _true = string "true" *> return `True <|> fail_word
-  let _null = string "null" *> return `Null <|> fail_word
+
+  let word s (res : [< `True | `False | `Null ]) =
+    (string_ignored s >>| (fun () -> res) <|> fail_word
+      : [< `True | `False | `Null ] Angstrom.t
+      :> _ json Angstrom.t)
+  ;;
+
+  let _false = word "false" `False
+  let _true = word "true" `True
+  let _null = word "null" `Null
 
   let num number =
-    take_while1 (function
-      | '-' | '+' | '0' .. '9' | '.' | 'e' | 'E' -> true
-      | _ -> false)
-    >>= fun s ->
+    let%bind.Angstrom s =
+      take_while1 (function
+        | '-' | '+' | '0' .. '9' | '.' | 'e' | 'E' -> true
+        | _ -> false)
+    in
     match number s with
     | Ok x -> return (`Number x)
     | Error msg -> fail msg
   ;;
 
-  let create_without_trailing_whitespace number =
-    let open Angstrom in
+  let create_without_trailing_whitespace (type number) number =
     let advance1 = advance 1 in
-    let pair x y = x, y in
+    let pair (x : string) (y : number json) = x, y in
     let str = Json_string.parse in
-    fix (fun json ->
+    fix (fun (json : number json Angstrom.t) ->
       let mem = lift2 pair (quo *> str <* ns) json in
-      let obj = advance1 *> sep_by vs mem <* rcb >>| fun ms -> `Object ms in
+      let obj : number json t =
+        advance1 *> sep_by vs mem <* rcb >>| fun ms -> `Object ms
+      in
       let obj = obj <?> "object" in
-      let arr = advance1 *> sep_by vs json <* rsb >>| fun vs -> `Array vs in
+      let arr : number json t =
+        advance1 *> sep_by vs json <* rsb >>| fun vs -> `Array vs
+      in
       let arr = arr <?> "array" in
-      let str = advance1 *> str >>| fun s -> `String s in
+      let str : number json t = advance1 *> str >>| fun s -> `String s in
       let str = str <?> "string" in
       let num = num number <?> "number" in
       let fail_char ?hint char =

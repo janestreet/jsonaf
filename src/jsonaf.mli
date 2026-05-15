@@ -16,10 +16,8 @@ val mode_cross : t -> t
 
 (** Note that we intentionally do not expose [compare] or [equal] functions for [t].
     Objects in JSON are considered unordered, so two different representations of [t] may
-    be unequal using the derived equal but the same according to the JSON spec. *)
-
-(** [exactly_equal] checks equality including exact key order within objects *)
-val exactly_equal : t -> t -> bool
+    be unequal using the derived equal but the same according to the JSON spec. See
+    {!With_structural_compare} for structural comparison. *)
 
 (** [parse s] parses a single JSON object from [s]. It is an error if [s] does not contain
     exactly one JSON object. See [parse_many]. *)
@@ -39,6 +37,24 @@ include Stringable.S with type t := t
 
 (** human-readable output, indenting all fields/array elements by two spaces. *)
 val to_string_hum : t -> string
+
+(** Provides a compare function that compares OCaml representation of the type as naively
+    derived.
+
+    This module is structured to be usable with ppxes like [ppx_compare]. For the meaning
+    of comparison, note that [123.0] is not equal to [123.00], and
+    [{"foo":true,"bar":true}] is not equal to [{"bar":true,"foo":true}] *)
+module With_structural_compare : sig
+  type nonrec t = t
+  [@@deriving sexp ~stackify, equal ~localize, compare ~localize, globalize, string]
+
+  include Comparable.S [@mode local] with type t := t
+  include Jsonafable.S with type t := t
+end
+
+(** [exactly_equal] checks equality including exact key order within objects. Same as
+    {!With_structural_compare.equal} *)
+val exactly_equal : t -> t -> bool
 
 include Pretty_printer.S with type t := t
 module Jsonafable = Jsonafable
@@ -62,6 +78,25 @@ end
 module Serializer : sig
   val serialize : t -> Faraday.t -> unit
   val run : t -> string
+end
+
+module Or_raw : sig
+  (** Similar to {!Jsonaf.t} but with a [`Raw_json_string] variant that will be copied
+      straight into the output (without any validation). *)
+
+  type t =
+    [ `Raw_json_string of string
+    | `Null
+    | `False
+    | `True
+    | `String of string
+    | `Number of string
+    | `Object of (string * t) list
+    | `Array of t list
+    ]
+    constraint t = (string, t) Jsonaf_kernel.Expert.Or_raw.t
+
+  val to_string : t -> string
 end
 
 include sig
@@ -111,7 +146,8 @@ include sig
   val keys_exn : t -> string list]
 end
 
-module Export : Jsonaf_kernel.Conv.Primitives
+module Conv = Jsonaf_kernel.Conv
+module Export : Conv.Primitives
 
 module Or_null : sig
   [%%template:

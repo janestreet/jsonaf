@@ -1,6 +1,7 @@
 module Bytes = BytesLabels
 
 module Parse = struct
+  module A = Angstrom
   open Angstrom
 
   (* To parse a string with escaping we do two passes:
@@ -285,8 +286,8 @@ module Parse = struct
     let state : Output_byte_counting.t ref = ref Output_byte_counting.initial_state in
     (* two pass: first work out how many bytes we need for the buffer, then allocate and
        fill it. *)
-    let%bind.Angstrom res =
-      Unsafe.take_while
+    let%bind.A res =
+      A.Unsafe.take_while
         (fun c ->
           let next_state =
             Output_byte_counting.transition ~current_state:!state ~char:c

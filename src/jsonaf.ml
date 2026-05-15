@@ -10,12 +10,11 @@ type t =
   | `Array of t list
   ]
   constraint t = Jsonaf_kernel.t
-[@@deriving sexp ~stackify, equal ~localize, globalize]
+[@@deriving sexp ~stackify, equal ~localize, compare ~localize, globalize]
 
 let mode_cross = Jsonaf_kernel.mode_cross
 let jsonaf_of_t t = t
 let t_of_jsonaf t = t
-let exactly_equal = equal
 let to_string t = Jsonaf_kernel.Serializer.run t
 let to_string_hum t = Jsonaf_kernel.Serializer.run_hum ~spaces:2 t
 let parse input = Jsonaf_kernel.Parser.run input |> Result.map_error ~f:Error.of_string
@@ -31,6 +30,20 @@ let of_string input =
     raise_s [%message "Jsonaf.of_string: parse error" (error : Error.t) (input : string)]
 ;;
 
+module With_structural_compare = struct
+  type nonrec t = t
+  [@@deriving sexp ~stackify, equal ~localize, compare ~localize, globalize, string]
+
+  include Comparable.Make [@mode local] [@modality portable] (struct
+      type nonrec t = t [@@deriving sexp, compare ~localize]
+    end)
+
+  let jsonaf_of_t t = t
+  let t_of_jsonaf t = t
+end
+
+let exactly_equal = With_structural_compare.equal
+
 module Jsonafable = Jsonafable
 module Parser = Jsonaf_kernel.Parser
 module Serializer = Jsonaf_kernel.Serializer
@@ -41,6 +54,30 @@ include Pretty_printer.Register (struct
     let module_name = "Jsonaf"
     let to_string = to_string_hum
   end)
+
+module Or_raw = struct
+  type t =
+    [ `Raw_json_string of string
+    | `Null
+    | `False
+    | `True
+    | `String of string
+    | `Number of string
+    | `Object of (string * t) list
+    | `Array of t list
+    ]
+    constraint t = (string, t) Jsonaf_kernel.Expert.Or_raw.t
+
+  let serialize t =
+    Jsonaf_kernel.Expert.Serializer.create (fun f num -> Faraday.write_string f num) t
+  ;;
+
+  let to_string (t : t) =
+    let faraday = Faraday.create 0x1000 in
+    serialize t faraday;
+    Faraday.serialize_to_string faraday
+  ;;
+end
 
 [%%template
 let maybe_globalize_t t = t [@@mode __ = global]
@@ -108,15 +145,13 @@ module%template Or_null_shim = struct
   ;;
 end
 
-module Jsonaf_conv = Jsonaf_kernel.Conv
-module Export = Jsonaf_conv.Primitives
+module Conv = Jsonaf_kernel.Conv
+module Export = Conv.Primitives
 
 let () =
   let module Sexp_conv = Sexplib0.Sexp_conv in
-  Sexp_conv.Exn_converter.add
-    [%extension_constructor Jsonaf_conv.Of_jsonaf_error]
-    (function
-    | Jsonaf_conv.Of_jsonaf_error (v0, v1) ->
+  Sexp_conv.Exn_converter.add [%extension_constructor Conv.Of_jsonaf_error] (function
+    | Conv.Of_jsonaf_error (v0, v1) ->
       let v0 =
         match v0 with
         | Failure v0 -> Sexplib0.Sexp.Atom v0

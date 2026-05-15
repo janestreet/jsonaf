@@ -15,14 +15,16 @@ type t =
 val mode_cross : t -> t
 
 module Parser : sig
-  (** [t_without_trailing_whitespace] will parse a single JSON value without consuming any
-      trailing whitespace. This is useful in the context of streaming multiple JSON values
-      because it will immediately return [t] when it is parsed, but it may fail in other
-      parsing contexts where the input buffer is expected to be fully consumed. *)
   val t_without_trailing_whitespace : t Angstrom.t
+  [@@ocaml.doc
+    {| [t_without_trailing_whitespace] will parse a single JSON value without consuming
+        any trailing whitespace. This is useful in the context of streaming multiple JSON
+        values because it will immediately return [t] when it is parsed, but it may fail
+        in other parsing contexts where the input buffer is expected to be fully consumed. |}]
 
-  (** This will read and ignore whitespace both before and after the JSON value. *)
   val t : t Angstrom.t
+  [@@ocaml.doc
+    {| This will read and ignore whitespace both before and after the JSON value. |}]
 
   val run : string -> (t, string) result
   val run_many : string -> (t list, string) result
