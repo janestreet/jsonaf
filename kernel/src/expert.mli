@@ -31,7 +31,7 @@ module Or_raw : sig
     't
 end
 
-module Parser : sig
+module Parser : sig @@ portable
   type 'number parser := string -> ('number, string) result
 
   val create_without_trailing_whitespace : 'number parser -> 'number t Angstrom.t
