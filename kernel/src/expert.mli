@@ -41,17 +41,19 @@ end
 module Serializer : sig
   type 'number serializer := Faraday.t -> 'number -> unit
 
-  (** Faraday serializer for a json object given a serializer for the number type. This
-      minimizes whitespace in the serialized representation. *)
   val create : 'number serializer -> ('number, _) Or_raw.t -> Faraday.t -> unit
+  [@@ocaml.doc
+    {| Faraday serializer for a json object given a serializer for the number type. This
+        minimizes whitespace in the serialized representation. |}]
 
-  (** [create_hum ~spaces] is like [serialize] but it adds newlines and spaces in the same
-      way that [JSON.stringify(_,_,spaces)] does in JavaScript. If [spaces] is 0 then the
-      result is the same as that of {!serialize}. *)
   val create_hum
     :  spaces:int
     -> 'number serializer
     -> ('number, _) Or_raw.t
     -> Faraday.t
     -> unit
+  [@@ocaml.doc
+    {| [create_hum ~spaces] is like [serialize] but it adds newlines and spaces in the
+        same way that [JSON.stringify(_,_,spaces)] does in JavaScript. If [spaces] is 0
+        then the result is the same as that of {!serialize}. |}]
 end

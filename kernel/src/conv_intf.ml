@@ -17,6 +17,7 @@ module type Primitives = sig
   val jsonaf_of_or_null : ('a -> Type.t) -> 'a or_null -> Type.t
   val jsonaf_of_list : ('a -> Type.t) -> 'a list -> Type.t
   val jsonaf_of_array : ('a -> Type.t) -> 'a array -> Type.t
+  val jsonaf_of_iarray : ('a -> Type.t) -> 'a Basement.Stdlib_iarray_labels.t -> Type.t
   val jsonaf_of_hashtbl : ('a -> Type.t) -> ('b -> Type.t) -> ('a, 'b) Hashtbl.t -> Type.t
   val unit_of_jsonaf : Type.t -> unit
   val bool_of_jsonaf : Type.t -> bool
@@ -34,6 +35,7 @@ module type Primitives = sig
   val or_null_of_jsonaf : (Type.t -> 'a) -> Type.t -> 'a or_null
   val list_of_jsonaf : (Type.t -> 'a) -> Type.t -> 'a list
   val array_of_jsonaf : (Type.t -> 'a) -> Type.t -> 'a array
+  val iarray_of_jsonaf : (Type.t -> 'a) -> Type.t -> 'a Basement.Stdlib_iarray_labels.t
   val hashtbl_of_jsonaf : (Type.t -> 'a) -> (Type.t -> 'b) -> Type.t -> ('a, 'b) Hashtbl.t
 end
 
@@ -111,6 +113,10 @@ module type Conv = sig
   (** [jsonaf_of_array conv ar] converts the value [ar] of type ['a array] to an
       Jsonaf_kernel. Uses [conv] to convert values of type ['a] to an Jsonaf_kernel. *)
   val jsonaf_of_array : ('a -> Type.t) -> 'a array -> Type.t
+
+  (** [jsonaf_of_iarray conv ar] converts the value [ar] of type ['a iarray] to an
+      Jsonaf_kernel. Uses [conv] to convert values of type ['a] to an Jsonaf_kernel. *)
+  val jsonaf_of_iarray : ('a -> Type.t) -> 'a Basement.Stdlib_iarray_labels.t -> Type.t
 
   (** [jsonaf_of_hashtbl conv_key conv_value htbl] converts the value [htbl] of type
       [('a, 'b) Hashtbl.t] to an Jsonaf_kernel. Uses [conv_key] to convert the hashtable
@@ -227,6 +233,11 @@ module type Conv = sig
       ['a array] using conversion function [conv], which converts an Jsonaf_kernel to a
       value of type ['a]. *)
   val array_of_jsonaf : (Type.t -> 'a) -> Type.t -> 'a array
+
+  (** [iarray_of_jsonaf conv jsonaf] converts Jsonaf_kernel [jsonaf] to a value of type
+      ['a iarray] using conversion function [conv], which converts an Jsonaf_kernel to a
+      value of type ['a]. *)
+  val iarray_of_jsonaf : (Type.t -> 'a) -> Type.t -> 'a Basement.Stdlib_iarray_labels.t
 
   (** [hashtbl_of_jsonaf conv_key conv_value jsonaf] converts Jsonaf_kernel [jsonaf] to a
       value of type [('a, 'b) Hashtbl.t] using conversion function [conv_key], which

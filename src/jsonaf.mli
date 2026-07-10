@@ -10,7 +10,7 @@ type t =
   | `Array of t list
   ]
   constraint t = Jsonaf_kernel.t
-[@@deriving sexp ~stackify, globalize]
+[@@deriving sexp ~stackify ~portable, globalize]
 
 val mode_cross : t -> t
 
