@@ -109,12 +109,16 @@ let jsonaf_of_triple jsonaf_of__a jsonaf_of__b jsonaf_of__c (a, b, c) =
    NOT. *)
 let jsonaf_of_list jsonaf_of__a lst = `Array (List.rev (List.rev_map ~f:jsonaf_of__a lst))
 
-let jsonaf_of_array jsonaf_of__a ar =
+let jsonaf_of_iarray jsonaf_of__a ar =
   let lst_ref = ref [] in
-  for i = Array.length ar - 1 downto 0 do
-    lst_ref := jsonaf_of__a ar.(i) :: !lst_ref
+  for i = Basement.Stdlib_iarray_labels.length ar - 1 downto 0 do
+    lst_ref := jsonaf_of__a (Basement.Stdlib_iarray_labels.get ar i) :: !lst_ref
   done;
   `Array !lst_ref
+;;
+
+let jsonaf_of_array jsonaf_of__a ar =
+  jsonaf_of_iarray jsonaf_of__a (Basement.Stdlib_iarray_labels.unsafe_of_array ar)
 ;;
 
 let jsonaf_of_hashtbl jsonaf_of_key jsonaf_of_val htbl =
@@ -308,6 +312,10 @@ let array_of_jsonaf a__of_jsonaf jsonaf =
   | _ -> of_jsonaf_error "array_of_jsonaf: list needed" jsonaf
 ;;
 
+let iarray_of_jsonaf a__of_jsonaf jsonaf =
+  Basement.Stdlib_iarray_labels.unsafe_of_array (array_of_jsonaf a__of_jsonaf jsonaf)
+;;
+
 let hashtbl_of_jsonaf key_of_jsonaf val_of_jsonaf jsonaf =
   match jsonaf with
   | `Array lst ->
@@ -336,6 +344,8 @@ let fun_of_jsonaf jsonaf =
 module Primitives = struct
   let jsonaf_of_array = jsonaf_of_array
   let array_of_jsonaf = array_of_jsonaf
+  let jsonaf_of_iarray = jsonaf_of_iarray
+  let iarray_of_jsonaf = iarray_of_jsonaf
   let jsonaf_of_bool = jsonaf_of_bool
   let bool_of_jsonaf = bool_of_jsonaf
   let jsonaf_of_char = jsonaf_of_char

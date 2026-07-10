@@ -10,7 +10,7 @@ type t =
   | `Array of t list
   ]
   constraint t = Jsonaf_kernel.t
-[@@deriving sexp ~stackify, globalize]
+[@@deriving sexp ~stackify ~portable, globalize]
 
 val mode_cross : t @ contended -> t @ portable @@ portable
 
@@ -75,12 +75,12 @@ module Parser : sig
   val run_many : string -> (t list, string) Result.t
 end
 
-module Serializer : sig @@ portable
+module Serializer : sig
   val serialize : t -> Faraday.t -> unit
   val run : t -> string
 end
 
-module Or_raw : sig @@ portable
+module Or_raw : sig
   (** Similar to {!Jsonaf.t} but with a [`Raw_json_string] variant that will be copied
       straight into the output (without any validation). *)
 
