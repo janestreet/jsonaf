@@ -36,16 +36,7 @@ external unsafe_blit_string
   = "caml_blit_string"
 [@@noalloc]
 
-[%%template
-let[@mode global] bytes_of_string str = Bytes.of_string str
-
-let[@mode local] bytes_of_string str =
-  let len = string_length str in
-  let bytes = create_local_bytes len in
-  unsafe_blit_string ~src:str ~src_pos:0 ~dst:bytes ~dst_pos:0 ~len;
-  bytes
-;;]
-
+let bytes_of_string str = Bytes.of_string str
 let jsonaf_of_unit () : t = `Null
 
 let jsonaf_of_bool b : t =
@@ -127,22 +118,16 @@ let jsonaf_of_fun _ = `String "<fun>"
 
 exception Of_jsonaf_error of exn * t
 
-let record_check_extra_fields = ref true
-
-[%%template
-let[@mode global] maybe_globalize t = t
-let[@mode local] maybe_globalize t = Type.globalize t
-
-[@@@mode.default m = (local, global)]
+let record_check_extra_fields = Basement.Dynamic.make true
+let maybe_globalize t = t
 
 let of_jsonaf_error_exn exc jsonaf =
-  raise (Of_jsonaf_error (exc, Type.mode_cross ((maybe_globalize [@mode m]) jsonaf)))
+  raise (Of_jsonaf_error (exc, Type.mode_cross (maybe_globalize jsonaf)))
 ;;
 
 let of_jsonaf_error what jsonaf =
-  raise
-    (Of_jsonaf_error (Failure what, Type.mode_cross ((maybe_globalize [@mode m]) jsonaf)))
-;;]
+  raise (Of_jsonaf_error (Failure what, Type.mode_cross (maybe_globalize jsonaf)))
+;;
 
 let look_like_int s =
   let r = ref true in
@@ -154,102 +139,82 @@ let look_like_int s =
   !r
 ;;
 
-[%%template
-let rec map_list (f : Type.t -> 'a) (xs : Type.t list) =
-  match[@exclave_if_stack a] xs with
-  | [] -> []
-  | x :: xs ->
-    (* Some tests are sensitive to evaluation order so always map first. This isn’t
-       tail-recursive but I think not allocating the list twice on the local stack is a
-       reasonable advantage here. *)
-    let fx = f x in
-    fx :: (map_list [@alloc a]) f xs
-[@@alloc a @ m = stack_local]
-;;
-
-let map_list f xs = List.map ~f xs [@@alloc heap]
-
-[@@@alloc.default a @ m = (heap_global, stack_local)]
+let map_list f xs = List.map ~f xs
 
 let unit_of_jsonaf jsonaf =
   match jsonaf with
   | `Null -> ()
-  | _ -> (of_jsonaf_error [@mode m]) "unit_of_jsonaf: `Null needed" jsonaf
+  | _ -> of_jsonaf_error "unit_of_jsonaf: `Null needed" jsonaf
 ;;
 
 let bool_of_jsonaf jsonaf =
   match jsonaf with
   | `True -> true
   | `False -> false
-  | _ -> (of_jsonaf_error [@mode m]) "bool_of_jsonaf: true/false needed" jsonaf
+  | _ -> of_jsonaf_error "bool_of_jsonaf: true/false needed" jsonaf
 ;;
 
 let string_of_jsonaf jsonaf =
   match jsonaf with
   | `String str -> str
-  | _ -> (of_jsonaf_error [@mode m]) "string_of_jsonaf: string needed" jsonaf
+  | _ -> of_jsonaf_error "string_of_jsonaf: string needed" jsonaf
 ;;
 
 let bytes_of_jsonaf jsonaf =
   match jsonaf with
-  | `String str -> (bytes_of_string [@mode m]) str [@exclave_if_stack a]
-  | _ -> (of_jsonaf_error [@mode m]) "bytes_of_jsonaf: string needed" jsonaf
+  | `String str -> bytes_of_string str
+  | _ -> of_jsonaf_error "bytes_of_jsonaf: string needed" jsonaf
 ;;
 
 let char_of_jsonaf jsonaf =
   match jsonaf with
   | `String str ->
     if String.length str <> 1
-    then
-      (of_jsonaf_error [@mode m])
-        "char_of_jsonaf: string must contain one character only"
-        jsonaf;
+    then of_jsonaf_error "char_of_jsonaf: string must contain one character only" jsonaf;
     str.[0]
-  | _ -> (of_jsonaf_error [@mode m]) "char_of_jsonaf: string of size one needed" jsonaf
+  | _ -> of_jsonaf_error "char_of_jsonaf: string of size one needed" jsonaf
 ;;
 
 let int_of_jsonaf jsonaf =
   match jsonaf with
   | `Number v when look_like_int v -> int_of_string v
-  | _ -> (of_jsonaf_error [@mode m]) "int_of_jsonaf: integer needed" jsonaf
+  | _ -> of_jsonaf_error "int_of_jsonaf: integer needed" jsonaf
 ;;
 
 let float_of_jsonaf jsonaf =
   match jsonaf with
   | `Number str -> float_of_string str
-  | _ -> (of_jsonaf_error [@mode m]) "float_of_jsonaf: float needed" jsonaf
+  | _ -> of_jsonaf_error "float_of_jsonaf: float needed" jsonaf
 ;;
 
 let int32_of_jsonaf jsonaf =
   match jsonaf with
   | `Number str when look_like_int str -> int32_of_string str
-  | _ -> (of_jsonaf_error [@mode m]) "int32_of_jsonaf: integer needed" jsonaf
+  | _ -> of_jsonaf_error "int32_of_jsonaf: integer needed" jsonaf
 ;;
 
 let int64_of_jsonaf jsonaf =
   match jsonaf with
   | `Number str when look_like_int str -> int64_of_string str
-  | _ -> (of_jsonaf_error [@mode m]) "int64_of_jsonaf: integer needed" jsonaf
+  | _ -> of_jsonaf_error "int64_of_jsonaf: integer needed" jsonaf
 ;;
 
 let nativeint_of_jsonaf jsonaf =
   match jsonaf with
   | `Number str when look_like_int str -> nativeint_of_string str
-  | _ -> (of_jsonaf_error [@mode m]) "nativeint_of_jsonaf: integer needed" jsonaf
+  | _ -> of_jsonaf_error "nativeint_of_jsonaf: integer needed" jsonaf
 ;;
 
-let ref_of_jsonaf (a__of_jsonaf : Type.t -> 'a) jsonaf =
-  ref (a__of_jsonaf jsonaf) [@exclave_if_stack a]
-;;
+let ref_of_jsonaf (a__of_jsonaf : Type.t -> 'a) jsonaf = ref (a__of_jsonaf jsonaf)
 
 let option_of_jsonaf (a__of_jsonaf : Type.t -> 'a) jsonaf =
-  match[@exclave_if_stack a] jsonaf with
+  match jsonaf with
   | `Null -> None
   | el -> Some (a__of_jsonaf el)
 ;;
 
 let or_null_of_jsonaf a__of_jsonaf (jsonaf : Type.t) =
-  match[@exclave_if_stack a] jsonaf with
+  match jsonaf with
   | `Null -> Basement.Or_null_shim.Null
   | el -> This (a__of_jsonaf el)
 ;;
@@ -257,11 +222,10 @@ let or_null_of_jsonaf a__of_jsonaf (jsonaf : Type.t) =
 let pair_of_jsonaf (a__of_jsonaf : Type.t -> 'a) (b__of_jsonaf : Type.t -> 'b) jsonaf =
   match jsonaf with
   | `Array [ a_jsonaf; b_jsonaf ] ->
-    (let a = a__of_jsonaf a_jsonaf in
-     let b = b__of_jsonaf b_jsonaf in
-     a, b)
-    [@exclave_if_stack a]
-  | _ -> (of_jsonaf_error [@mode m]) "pair_of_jsonaf: invalid format" jsonaf
+    let a = a__of_jsonaf a_jsonaf in
+    let b = b__of_jsonaf b_jsonaf in
+    a, b
+  | _ -> of_jsonaf_error "pair_of_jsonaf: invalid format" jsonaf
 ;;
 
 let triple_of_jsonaf
@@ -272,19 +236,18 @@ let triple_of_jsonaf
   =
   match jsonaf with
   | `Array [ a_jsonaf; b_jsonaf; c_jsonaf ] ->
-    (let a = a__of_jsonaf a_jsonaf in
-     let b = b__of_jsonaf b_jsonaf in
-     let c = c__of_jsonaf c_jsonaf in
-     a, b, c)
-    [@exclave_if_stack a]
-  | _ -> (of_jsonaf_error [@mode m]) "triple_of_jsonaf: invalid format" jsonaf
+    let a = a__of_jsonaf a_jsonaf in
+    let b = b__of_jsonaf b_jsonaf in
+    let c = c__of_jsonaf c_jsonaf in
+    a, b, c
+  | _ -> of_jsonaf_error "triple_of_jsonaf: invalid format" jsonaf
 ;;
 
 let list_of_jsonaf (a__of_jsonaf : Type.t -> 'a) jsonaf =
   match jsonaf with
-  | `Array lst -> (map_list [@alloc a]) a__of_jsonaf lst [@exclave_if_stack a]
-  | _ -> (of_jsonaf_error [@mode m]) "list_of_jsonaf: list needed" jsonaf
-;;]
+  | `Array lst -> map_list a__of_jsonaf lst
+  | _ -> of_jsonaf_error "list_of_jsonaf: list needed" jsonaf
+;;
 
 let lazy_t_of_jsonaf a__of_jsonaf jsonaf = Lazy.from_val (a__of_jsonaf jsonaf)
 
@@ -322,16 +285,13 @@ let hashtbl_of_jsonaf key_of_jsonaf val_of_jsonaf jsonaf =
   | _ -> of_jsonaf_error "hashtbl_of_jsonaf: list needed" jsonaf
 ;;
 
-[%%template
-[@@@alloc.default a @ m = (heap_global, stack_local)]
-
 let opaque_of_jsonaf jsonaf =
-  (of_jsonaf_error [@mode m]) "opaque_of_jsonaf: cannot convert opaque values" jsonaf
+  of_jsonaf_error "opaque_of_jsonaf: cannot convert opaque values" jsonaf
 ;;
 
 let fun_of_jsonaf jsonaf =
-  (of_jsonaf_error [@mode m]) "fun_of_jsonaf: cannot convert function values" jsonaf
-;;]
+  of_jsonaf_error "fun_of_jsonaf: cannot convert function values" jsonaf
+;;
 
 module Primitives = struct
   let jsonaf_of_array = jsonaf_of_array

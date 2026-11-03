@@ -10,7 +10,7 @@ type t =
   | `Array of t list
   ]
   constraint t = Jsonaf_kernel.t
-[@@deriving sexp ~stackify ~portable, globalize]
+[@@deriving sexp, globalize]
 
 val mode_cross : t -> t
 
@@ -19,24 +19,29 @@ val mode_cross : t -> t
     be unequal using the derived equal but the same according to the JSON spec. See
     {!With_structural_compare} for structural comparison. *)
 
-(** [parse s] parses a single JSON object from [s]. It is an error if [s] does not contain
-    exactly one JSON object. See [parse_many]. *)
+include Stringable.Of_stringable with type t := t
+
 val parse : string -> t Or_error.t
+[@@ocaml.doc
+  {| [parse s] parses a single JSON object from [s]. It is an error if [s] does not
+      contain exactly one JSON object. See [parse_many]. |}]
 
-(** [parse_many] parses zero or more JSON objects from [s].
-
-    Caveats: [parse_many] succeeds only if all JSON objects parse, and its error messages
-    may be significantly worse than those from [parse].
-
-    To get the well-formed objects up to the syntax error, and then a good error message,
-    consider piping through [jq -c], splitting on newlines, and then parsing each line
-    with [parse]. But this is much slower than [run_many]. *)
 val parse_many : string -> t list Or_error.t
+[@@ocaml.doc
+  {| [parse_many] parses zero or more JSON objects from [s].
 
-include Stringable.S with type t := t
+      Caveats: [parse_many] succeeds only if all JSON objects parse, and its error
+      messages may be significantly worse than those from [parse].
 
-(** human-readable output, indenting all fields/array elements by two spaces. *)
+      To get the well-formed objects up to the syntax error, and then a good error
+      message, consider piping through [jq -c], splitting on newlines, and then parsing
+      each line with [parse]. But this is much slower than [run_many]. |}]
+
+include Stringable.To_stringable with type t := t
+
 val to_string_hum : t -> string
+[@@ocaml.doc
+  {| human-readable output, indenting all fields/array elements by two spaces. |}]
 
 (** Provides a compare function that compares OCaml representation of the type as naively
     derived.
@@ -45,10 +50,9 @@ val to_string_hum : t -> string
     of comparison, note that [123.0] is not equal to [123.00], and
     [{"foo":true,"bar":true}] is not equal to [{"bar":true,"foo":true}] *)
 module With_structural_compare : sig
-  type nonrec t = t
-  [@@deriving sexp ~stackify, equal ~localize, compare ~localize, globalize, string]
+  type nonrec t = t [@@deriving sexp, equal, compare, globalize, string]
 
-  include Comparable.S [@mode local] with type t := t
+  include Comparable.S with type t := t
   include Jsonafable.S with type t := t
 end
 
@@ -100,9 +104,6 @@ module Or_raw : sig
 end
 
 include sig
-  [%%template:
-  [@@@mode.default m = (local, global)]
-
   val index : int -> t -> t option
   val index_exn : int -> t -> t
   val member : string -> t -> t option
@@ -134,25 +135,19 @@ include sig
 
   (** If [t] is an object, return the association list between keys and values. Otherwise,
       raise. O(1). *)
-  val assoc_list_exn : t -> (string * t) list]
-
-  [%%template:
-  [@@@alloc.default a @ m = (stack_local, heap_global)]
+  val assoc_list_exn : t -> (string * t) list
 
   (** If [t] is an object, return the keys of that object. Otherwise, return [None]. O(n). *)
   val keys : t -> string list option
 
   (** If [t] is an object, return the keys of that object. Otherwise, raise. O(n). *)
-  val keys_exn : t -> string list]
+  val keys_exn : t -> string list
 end
 
 module Conv = Jsonaf_kernel.Conv
 module Export : Conv.Primitives
 
 module Or_null : sig
-  [%%template:
-  [@@@mode.default m = (local, global)]
-
   val index : int -> t -> t or_null
   val member : string -> t -> t or_null
   val bool : t -> bool or_null
@@ -167,5 +162,5 @@ module Or_null : sig
 
   (** If [t] is an object, return the association list between keys and values. Otherwise,
       return [None]. O(1). *)
-  val assoc_list : t -> (string * t) list or_null]
+  val assoc_list : t -> (string * t) list or_null
 end

@@ -403,9 +403,11 @@ let[@zero_alloc] [@inline always] has_zero_byte bytes =
   (bytes - 0x0101010101010101L) land lognot bytes land 0x8080808080808080L <> 0L
 ;;
 
+external get_int64_ne : string -> int -> int64 = "%caml_string_get64"
+
 let[@zero_alloc] [@inline always] any_next_8_bytes_need_escaping s ~off =
   let open Int64.O in
-  let bytes = String.get_int64_ne s off in
+  let bytes = get_int64_ne s off in
   let anything_lt_32 = has_zero_byte (bytes land 0xe0e0e0e0e0e0e0e0L) in
   let any_double_quote = has_zero_byte (bytes lxor 0x2222222222222222L) in
   let any_backslash = has_zero_byte (bytes lxor 0x5c5c5c5c5c5c5c5cL) in

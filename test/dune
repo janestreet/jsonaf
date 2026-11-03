@@ -2,4 +2,4 @@
  (name jsonaf_test)
  (libraries core expect_test_helpers_core jsonaf)
  (preprocess
-  (pps ppx_jane ppx_jsonaf_conv)))
+  (pps ppx_jane -compare-require-explicit-locality ppx_jsonaf_conv)))

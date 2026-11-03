@@ -141,10 +141,7 @@ module type Conv = sig
 
   (** [record_check_extra_fields] checks for extra (= unknown) fields in record
       Jsonaf_kernels. *)
-  val record_check_extra_fields : bool ref
-
-  [%%template:
-  [@@@mode.default m = (global, local)]
+  val record_check_extra_fields : bool Basement.Dynamic.t
 
   (** [of_jsonaf_error reason jsonaf]
       @raise Of_jsonaf_error (Failure reason, jsonaf). *)
@@ -152,10 +149,7 @@ module type Conv = sig
 
   (** [of_jsonaf_error_exn exc jsonaf]
       @raise Of_jsonaf_error (exc, jsonaf). *)
-  val of_jsonaf_error_exn : exn -> Type.t -> 'a]
-
-  [%%template:
-  [@@@alloc.default a @ m = (heap_global, stack_local)]
+  val of_jsonaf_error_exn : exn -> Type.t -> 'a
 
   (** [unit_of_jsonaf jsonaf] converts Jsonaf_kernel [jsonaf] to a value of type [unit]. *)
   val unit_of_jsonaf : Type.t -> unit
@@ -222,7 +216,7 @@ module type Conv = sig
   (** [list_of_jsonaf conv jsonaf] converts Jsonaf_kernel [jsonaf] to a value of type
       ['a list] using conversion function [conv], which converts an Jsonaf_kernel to a
       value of type ['a]. *)
-  val list_of_jsonaf : (Type.t -> 'a) -> Type.t -> 'a list]
+  val list_of_jsonaf : (Type.t -> 'a) -> Type.t -> 'a list
 
   (** [lazy_t_of_jsonaf conv jsonaf] converts Jsonaf_kernel [jsonaf] to a value of type
       ['a lazy_t] using conversion function [conv], which converts an Jsonaf_kernel to a
@@ -245,9 +239,6 @@ module type Conv = sig
       which converts an Jsonaf_kernel to hashtable value of type ['b]. *)
   val hashtbl_of_jsonaf : (Type.t -> 'a) -> (Type.t -> 'b) -> Type.t -> ('a, 'b) Hashtbl.t
 
-  [%%template:
-  [@@@alloc.default a @ m = (heap_global, stack_local)]
-
   (** [opaque_of_jsonaf jsonaf]
       @raise Of_jsonaf_error
         when attempting to convert an Jsonaf_kernel to an opaque value. *)
@@ -255,7 +246,7 @@ module type Conv = sig
 
   (** [fun_of_jsonaf jsonaf]
       @raise Of_jsonaf_error when attempting to convert an Jsonaf_kernel to a function. *)
-  val fun_of_jsonaf : Type.t -> 'a]
+  val fun_of_jsonaf : Type.t -> 'a
 
   module type Primitives = Primitives
 
