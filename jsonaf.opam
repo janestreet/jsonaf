@@ -16,7 +16,7 @@ depends: [
   "basement"
   "ppx_jane"
   "angstrom"    {>= "0.15.0"}
-  "bigstringaf"
+  "bigstringaf" {= "0.10.0+ox"}
   "dune"        {>= "3.17.0"}
   "faraday"     {>= "0.8.1"}
 ]

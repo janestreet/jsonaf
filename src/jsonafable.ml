@@ -3,7 +3,7 @@ include Jsonaf_kernel.Jsonafable
 
 module Stable = struct
   module Of_jsonafable = struct
-    module V1
+    module%template.portable V1
         (Jsonafable : S)
         (M : sig
            type t
@@ -18,7 +18,7 @@ module Stable = struct
   end
 
   module Of_stringable = struct
-    module V1 (M : Stringable.S) : S with type t := M.t = struct
+    module%template.portable V1 (M : Stringable.S) : S with type t := M.t = struct
       let t_of_jsonaf = function
         | `String s as json ->
           (match M.of_string s with
@@ -32,7 +32,7 @@ module Stable = struct
   end
 
   module Of_floatable = struct
-    module V1 (M : Floatable.S) : S with type t := M.t = struct
+    module%template.portable V1 (M : Floatable.S) : S with type t := M.t = struct
       let t_of_jsonaf = function
         | `Number s as json ->
           (match M.of_float (Float.of_string s) with
@@ -48,6 +48,9 @@ module Stable = struct
   end
 end
 
-module Of_jsonafable = Stable.Of_jsonafable.V1
-module Of_stringable = Stable.Of_stringable.V1
-module Of_floatable = Stable.Of_floatable.V1
+[%%template
+[@@@modality.default p = (portable, nonportable)]
+
+module Of_jsonafable = Stable.Of_jsonafable.V1 [@modality p]
+module Of_stringable = Stable.Of_stringable.V1 [@modality p]
+module Of_floatable = Stable.Of_floatable.V1 [@modality p]]

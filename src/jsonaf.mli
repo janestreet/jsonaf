@@ -19,24 +19,29 @@ val mode_cross : t @ contended -> t @ portable @@ portable
     be unequal using the derived equal but the same according to the JSON spec. See
     {!With_structural_compare} for structural comparison. *)
 
-(** [parse s] parses a single JSON object from [s]. It is an error if [s] does not contain
-    exactly one JSON object. See [parse_many]. *)
+include Stringable.Of_stringable with type t := t
+
 val parse : string -> t Or_error.t
+[@@ocaml.doc
+  {| [parse s] parses a single JSON object from [s]. It is an error if [s] does not
+      contain exactly one JSON object. See [parse_many]. |}]
 
-(** [parse_many] parses zero or more JSON objects from [s].
-
-    Caveats: [parse_many] succeeds only if all JSON objects parse, and its error messages
-    may be significantly worse than those from [parse].
-
-    To get the well-formed objects up to the syntax error, and then a good error message,
-    consider piping through [jq -c], splitting on newlines, and then parsing each line
-    with [parse]. But this is much slower than [run_many]. *)
 val parse_many : string -> t list Or_error.t
+[@@ocaml.doc
+  {| [parse_many] parses zero or more JSON objects from [s].
 
-include Stringable.S with type t := t
+      Caveats: [parse_many] succeeds only if all JSON objects parse, and its error
+      messages may be significantly worse than those from [parse].
 
-(** human-readable output, indenting all fields/array elements by two spaces. *)
-val to_string_hum : t -> string
+      To get the well-formed objects up to the syntax error, and then a good error
+      message, consider piping through [jq -c], splitting on newlines, and then parsing
+      each line with [parse]. But this is much slower than [run_many]. |}]
+
+include Stringable.To_stringable [@mode local] with type t := t
+
+val to_string_hum : t @ local -> string
+[@@ocaml.doc
+  {| human-readable output, indenting all fields/array elements by two spaces. |}]
 
 (** Provides a compare function that compares OCaml representation of the type as naively
     derived.
@@ -54,11 +59,12 @@ end
 
 (** [exactly_equal] checks equality including exact key order within objects. Same as
     {!With_structural_compare.equal} *)
-val exactly_equal : t -> t -> bool
+val%template exactly_equal : t @ m -> t @ m -> bool @@ portable
+[@@mode m = (local, global)]
 
 include Pretty_printer.S with type t := t
 module Jsonafable = Jsonafable
-include Jsonafable.S with type t := t
+include Jsonafable.S with type t := t @@ portable
 
 module Parser : sig
   (** For parsing a JSON stream, e.g., when using [Angstrom_async.parse_many], you should
@@ -76,8 +82,8 @@ module Parser : sig
 end
 
 module Serializer : sig
-  val serialize : t -> Faraday.t -> unit
-  val run : t -> string
+  val serialize : t @ local -> Faraday.t -> unit
+  val run : t @ local -> string
 end
 
 module Or_raw : sig
@@ -96,7 +102,7 @@ module Or_raw : sig
     ]
     constraint t = (string, t) Jsonaf_kernel.Expert.Or_raw.t
 
-  val to_string : t -> string
+  val to_string : t @ local -> string
 end
 
 include sig @@ portable

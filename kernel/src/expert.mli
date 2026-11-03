@@ -39,9 +39,9 @@ module Parser : sig
 end
 
 module Serializer : sig
-  type 'number serializer := Faraday.t -> 'number -> unit
+  type 'number serializer := Faraday.t -> 'number @ local -> unit
 
-  val create : 'number serializer -> ('number, _) Or_raw.t -> Faraday.t -> unit
+  val create : 'number serializer -> ('number, _) Or_raw.t @ local -> Faraday.t -> unit
   [@@ocaml.doc
     {| Faraday serializer for a json object given a serializer for the number type. This
         minimizes whitespace in the serialized representation. |}]
@@ -49,7 +49,7 @@ module Serializer : sig
   val create_hum
     :  spaces:int
     -> 'number serializer
-    -> ('number, _) Or_raw.t
+    -> ('number, _) Or_raw.t @ local
     -> Faraday.t
     -> unit
   [@@ocaml.doc

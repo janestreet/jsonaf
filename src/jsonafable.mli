@@ -1,7 +1,7 @@
 open! Base
 include module type of Jsonaf_kernel.Jsonafable
 
-module Of_jsonafable
+module%template.portable Of_jsonafable
     (Jsonafable : S)
     (M : sig
        type t
@@ -10,19 +10,28 @@ module Of_jsonafable
        val to_jsonafable : t -> Jsonafable.t
      end) : S with type t := M.t
 
-module Of_stringable (M : Stringable.S) : S with type t := M.t
-module Of_floatable (M : Floatable.S) : S with type t := M.t
+module%template.portable Of_stringable (M : Stringable.S) : S with type t := M.t
+module%template.portable Of_floatable (M : Floatable.S) : S with type t := M.t
 
 module Stable : sig
   module Of_jsonafable : sig
-    module V1 : module type of Of_jsonafable
+    [%%template:
+    [@@@modality.default p = (portable, nonportable)]
+
+    module V1 : module type of Of_jsonafable [@modality p]]
   end
 
   module Of_stringable : sig
-    module V1 : module type of Of_stringable
+    [%%template:
+    [@@@modality.default p = (portable, nonportable)]
+
+    module V1 : module type of Of_stringable [@modality p]]
   end
 
   module Of_floatable : sig
-    module V1 : module type of Of_floatable
+    [%%template:
+    [@@@modality.default p = (portable, nonportable)]
+
+    module V1 : module type of Of_floatable [@modality p]]
   end
 end

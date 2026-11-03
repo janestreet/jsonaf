@@ -141,7 +141,7 @@ module type Conv = sig @@ portable
 
   (** [record_check_extra_fields] checks for extra (= unknown) fields in record
       Jsonaf_kernels. *)
-  val record_check_extra_fields : bool ref
+  val record_check_extra_fields : bool Basement.Dynamic.t
 
   [%%template:
   [@@@mode.default m = (global, local)]

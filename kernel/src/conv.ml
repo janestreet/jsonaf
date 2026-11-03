@@ -131,7 +131,7 @@ let jsonaf_of_fun _ = `String "<fun>"
 
 exception Of_jsonaf_error of exn * t @@ contended portable
 
-let record_check_extra_fields = ref true
+let record_check_extra_fields = Basement.Dynamic.make true
 
 [%%template
 let[@mode global] maybe_globalize t = t

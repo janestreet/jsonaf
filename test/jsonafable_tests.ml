@@ -3,13 +3,13 @@ open Jsonaf
 open Expect_test_helpers_core
 
 module Status = struct
-  type t = bool [@@deriving compare, sexp_of]
+  type t = bool [@@deriving compare ~localize, sexp_of]
 
   include Jsonafable.Of_stringable (Bool)
 end
 
 module Wrapped_status = struct
-  type t = { status : Status.t } [@@deriving compare, sexp_of]
+  type t = { status : Status.t } [@@deriving compare ~localize, sexp_of]
 
   include
     Jsonafable.Of_jsonafable
@@ -24,8 +24,8 @@ end
 
 let%expect_test "round trip" =
   let open struct
-    module type S = sig
-      type t [@@deriving compare, jsonaf, sexp_of]
+    module type%template [@mode m = (local, global)] S = sig
+      type t [@@deriving (compare [@mode.explicit m]), jsonaf, sexp_of]
     end
   end in
   let test (type a) (module M : S with type t = a) expected =

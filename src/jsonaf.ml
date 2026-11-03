@@ -42,7 +42,9 @@ module With_structural_compare = struct
   let t_of_jsonaf t = t
 end
 
-let exactly_equal = With_structural_compare.equal
+let%template[@mode m = (local, global)] exactly_equal =
+  (With_structural_compare.equal [@mode m])
+;;
 
 module Jsonafable = Jsonafable
 module Parser = Jsonaf_kernel.Parser
@@ -68,8 +70,11 @@ module Or_raw = struct
     ]
     constraint t = (string, t) Jsonaf_kernel.Expert.Or_raw.t
 
-  let serialize t =
-    Jsonaf_kernel.Expert.Serializer.create (fun f num -> Faraday.write_string f num) t
+  let serialize t faraday =
+    Jsonaf_kernel.Expert.Serializer.create
+      (fun f num -> Faraday.write_string f num)
+      t
+      faraday
   ;;
 
   let to_string (t : t) =

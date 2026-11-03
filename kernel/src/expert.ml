@@ -1,5 +1,3 @@
-module List = ListLabels
-
 type 'number t =
   [ `Null
   | `False
@@ -135,7 +133,15 @@ module Serializer = struct
       write_spaces faraday indent)
   ;;
 
-  let rec serialize_hum' ~indent ~spaces serialize_number t faraday =
+  let rec list_iter_local (xs @ local) ~f =
+    match xs with
+    | [] -> ()
+    | x :: xs ->
+      f x;
+      list_iter_local xs ~f
+  ;;
+
+  let rec serialize_hum' (t @ local) ~indent ~spaces serialize_number faraday : unit =
     match t with
     | `Null -> Faraday.write_string faraday "null"
     | `False -> Faraday.write_string faraday "false"
@@ -143,46 +149,49 @@ module Serializer = struct
     | `String string -> Json_string.serialize faraday string
     | `Number number -> serialize_number faraday number
     | `Object items ->
-      serialize_list ~indent ~spaces serialize_number faraday "{}" serialize_kv items
+      serialize_list items ~indent ~spaces serialize_number faraday "{}" serialize_kv
     | `Array items ->
-      serialize_list ~indent ~spaces serialize_number faraday "[]" serialize_hum' items
+      serialize_list items ~indent ~spaces serialize_number faraday "[]" serialize_hum'
     | `Raw_json_string string -> Faraday.write_string faraday string
 
   and serialize_list
     : 'a 'b.
-    indent:int
+    'b list @ local
+    -> indent:int
     -> spaces:int
     -> 'a
     -> Faraday.t
     -> string
-    -> (indent:int -> spaces:int -> 'a -> 'b -> Faraday.t -> unit)
-    -> 'b list
+    -> ('b @ local -> indent:int -> spaces:int -> 'a -> Faraday.t -> unit)
     -> unit
     =
-    fun ~indent ~spaces serialize_number faraday brackets serialize_item items ->
+    fun items ~indent ~spaces serialize_number faraday brackets serialize_item ->
     match items with
     | [] -> Faraday.write_string faraday brackets
     | item :: items ->
       Faraday.write_char faraday brackets.[0];
       let indent = indent + spaces in
       maybe_newline_and_indent ~spaces faraday indent;
-      serialize_item ~indent ~spaces serialize_number item faraday;
-      List.iter items ~f:(fun item ->
+      serialize_item item ~indent ~spaces serialize_number faraday;
+      list_iter_local items ~f:(fun item ->
         Faraday.write_char faraday ',';
         maybe_newline_and_indent ~spaces faraday indent;
-        serialize_item ~indent ~spaces serialize_number item faraday);
+        serialize_item item ~indent ~spaces serialize_number faraday);
       let indent = indent - spaces in
       maybe_newline_and_indent ~spaces faraday indent;
       Faraday.write_char faraday brackets.[1]
 
-  and serialize_kv ~indent ~spaces serialize_number (k, v) faraday =
+  and serialize_kv ((k, v) @ local) ~indent ~spaces serialize_number faraday =
     Json_string.serialize faraday k;
     Faraday.write_char faraday ':';
     if spaces > 0 then Faraday.write_char faraday ' ';
-    serialize_hum' ~indent ~spaces serialize_number v faraday
+    serialize_hum' v ~indent ~spaces serialize_number faraday
   ;;
 
   (* need to eta-expand to avoid the value restriction *)
-  let create s t = serialize_hum' ~indent:0 ~spaces:0 s t
-  let create_hum ~spaces s t = serialize_hum' ~indent:0 ~spaces s t
+  let create s (t @ local) faraday = serialize_hum' t ~indent:0 ~spaces:0 s faraday
+
+  let create_hum ~spaces s (t @ local) faraday =
+    serialize_hum' t ~indent:0 ~spaces s faraday
+  ;;
 end

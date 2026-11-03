@@ -31,13 +31,13 @@ module Parser : sig
 end
 
 module Serializer : sig
-  val serialize : t -> Faraday.t -> unit
+  val serialize : t @ local -> Faraday.t -> unit
   [@@ocaml.doc {| Serialize a json object without any unnecessary whitespace. |}]
 
-  val run : t -> string
+  val run : t @ local -> string
   [@@ocaml.doc {| Convert a json object to a string as {!serialize} would. |}]
 
-  val serialize_hum : spaces:int -> t -> Faraday.t -> unit
+  val serialize_hum : spaces:int -> t @ local -> Faraday.t -> unit
   [@@ocaml.doc
     {| [serialize_hum ~spaces t] serializes [t] in a “human readable” form with newlines
         separating elements of objects and arrays and an additional indentation of
@@ -45,7 +45,7 @@ module Serializer : sig
 
         Passing [~spaces:0] gives the exact same output as {!serialize}. |}]
 
-  val run_hum : spaces:int -> t -> string
+  val run_hum : spaces:int -> t @ local -> string
   [@@ocaml.doc
     {| [run_hum ~spaces, t] should produce very similar output to
         [JSON.stringify(t,null,spaces)] in JavaScript. |}]
